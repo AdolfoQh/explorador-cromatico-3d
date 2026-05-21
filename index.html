@@ -295,12 +295,10 @@ function drawWheel(){
         const rad=(h-90)*Math.PI/180;
         const x=cx+Math.cos(rad)*dist, y=cy+Math.sin(rad)*dist;
         ctx.beginPath();ctx.moveTo(_ax,_ay);ctx.lineTo(x,y);
-        ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();
-        ctx.setLineDash([]);
+        ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.stroke();
         ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
-        ctx.fillStyle=`hsla(${Math.round(h)},${saturation}%,${luminosity}%,0.35)`;ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();
-        ctx.setLineDash([]);
+        ctx.fillStyle=hslCss(Math.round(h),saturation,luminosity);ctx.fill();
+        ctx.strokeStyle='white';ctx.lineWidth=1.5;ctx.stroke();
       }
     });
   }

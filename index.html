@@ -78,6 +78,25 @@
     #printSheet *{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}
     @page{size:A4 landscape;margin:0}
   }
+
+  /* MOBILE TABS */
+  .mobile-tabs{display:none;background:var(--surface);border-bottom:1px solid var(--border)}
+  .mobile-tab{flex:1;padding:11px 0;border:none;background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.03em}
+  .mobile-tab.active{color:var(--text);border-bottom-color:#fff}
+  @media(max-width:767px){
+    .mobile-tabs{display:flex}
+    .main{grid-template-columns:1fr!important;height:calc(100dvh - 97px);overflow:hidden}
+    .left-panel{border-right:none;border-bottom:1px solid var(--border);display:none;flex-direction:column;height:100%;overflow-y:auto}
+    .center-panel{display:none;height:100%}
+    .right-panel{border-left:none;display:none;height:100%;overflow-y:auto}
+    .left-panel.mob-active{display:flex}
+    .center-panel.mob-active{display:flex}
+    .right-panel.mob-active{display:flex;flex-direction:column}
+    #threeCanvas{flex:1;min-height:0}
+    .product-tabs{flex-shrink:0}
+    .rotate-hint{bottom:70px}
+    .wheel-wrap canvas{width:180px!important;height:180px!important}
+  }
 </style>
 </head>
 <body>
@@ -88,6 +107,11 @@
     <button class="mode-tab active" id="tabLibre" onclick="setMode('libre')">Exploración libre</button>
     <button class="mode-tab" id="tabEjercicio" onclick="setMode('ejercicio')">Ejercicio guiado</button>
   </div>
+</div>
+<div class="mobile-tabs">
+  <button class="mobile-tab" onclick="setMobileTab('rueda',this)">🎨 Rueda</button>
+  <button class="mobile-tab active" onclick="setMobileTab('3d',this)">📦 3D</button>
+  <button class="mobile-tab" onclick="setMobileTab('paleta',this)">🎨 Paleta</button>
 </div>
 
 <div class="main">
@@ -310,6 +334,14 @@ function drawWheel(){
 
 let wheelDragging=false;
 const wCanvas=document.getElementById('colorWheel');
+// DPR fix: escala el canvas al pixel ratio nativo del dispositivo (elimina moiré en retina/OLED)
+(function(){
+  const _dpr=window.devicePixelRatio||1;
+  if(_dpr===1) return;
+  const _sz=210;
+  wCanvas.width=_sz*_dpr; wCanvas.height=_sz*_dpr;
+  wCanvas.style.width=_sz+'px'; wCanvas.style.height=_sz+'px';
+})();
 
 function getWheelPos(el,e){
   const rect=el.getBoundingClientRect();
@@ -1023,6 +1055,26 @@ function _doPDF(){
     printImg.onload=()=>setTimeout(()=>window.print(),150);
   }
 }
+// ── MOBILE TABS ───────────────────────────────────────────────────────────
+function setMobileTab(tab,btn){
+  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.querySelector('.left-panel').classList.toggle('mob-active',tab==='rueda');
+  document.querySelector('.center-panel').classList.toggle('mob-active',tab==='3d');
+  document.querySelector('.right-panel').classList.toggle('mob-active',tab==='paleta');
+  if(tab==='3d') setTimeout(()=>{ if(typeof onResize==='function') onResize(); },80);
+  if(tab==='rueda') setTimeout(()=>drawWheel(),50);
+}
+// Inicializar: en mobile, mostrar panel 3D por defecto
+if(window.innerWidth<768){
+  setMobileTab('3d', document.querySelector('.mobile-tab.active'));
+} else {
+  // Desktop: todos los paneles visibles (no mob-active needed)
+  document.querySelector('.left-panel').classList.remove('mob-active');
+  document.querySelector('.center-panel').classList.remove('mob-active');
+  document.querySelector('.right-panel').classList.remove('mob-active');
+}
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>

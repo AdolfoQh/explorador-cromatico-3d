@@ -158,7 +158,7 @@
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
 let baseHue=200, saturation=70, luminosity=50;
-let anchorSat=null, anchorLum=null;
+let areaSat=[], areaLum=[];  // sat/lum independiente por área (null = usa global)
 let currentScheme='complementario', currentProduct='silla', currentMode='libre';
 let palette=[], currentExercise=null;
 
@@ -213,34 +213,97 @@ function buildPalette(){
 }
 
 // ── COLOR WHEEL ────────────────────────────────────────────────────────────
+// 8 anillos: afuera → adentro (S alta/L media → S baja/L alta)
+const WHEEL_RINGS=[
+  {s:100,l:43},{s:88,l:50},{s:74,l:57},{s:60,l:63},
+  {s:46,l:70},{s:32,l:76},{s:20,l:83},{s:10,l:89}
+];
+
+function ringIdxFromSL(s,l){
+  let best=0,bd=Infinity;
+  WHEEL_RINGS.forEach((r,i)=>{const d=Math.abs(r.s-s)+Math.abs(r.l-l);if(d<bd){bd=d;best=i;}});
+  return best;
+}
+
 function drawWheel(){
   const canvas=document.getElementById('colorWheel');
   const ctx=canvas.getContext('2d');
-  const cx=canvas.width/2,cy=canvas.height/2,r=canvas.width/2-4;
+  const cx=canvas.width/2,cy=canvas.height/2;
+  const maxR=canvas.width/2-3, minR=maxR*0.13;
+  const n=WHEEL_RINGS.length, ringW=(maxR-minR)/n;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  for(let deg=0;deg<360;deg++){
-    const rad=(deg-90)*Math.PI/180;
-    const rad2=((deg+1)-90)*Math.PI/180;
-    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,rad,rad2);ctx.closePath();
-    ctx.fillStyle=`hsl(${deg},${saturation}%,${luminosity}%)`;ctx.fill();
+
+  // dibujar anillos
+  for(let ri=0;ri<n;ri++){
+    const ring=WHEEL_RINGS[ri];
+    const oR=maxR-ri*ringW, iR=maxR-(ri+1)*ringW;
+    for(let deg=0;deg<360;deg++){
+      const a1=(deg-90)*Math.PI/180, a2=((deg+1)-90)*Math.PI/180;
+      ctx.beginPath();
+      ctx.arc(cx,cy,oR,a1,a2);
+      ctx.arc(cx,cy,Math.max(iR,1),a2,a1,true);
+      ctx.closePath();
+      ctx.fillStyle=`hsl(${deg},${ring.s}%,${ring.l}%)`;
+      ctx.fill();
+    }
+    // separador entre anillos
+    ctx.beginPath();ctx.arc(cx,cy,iR,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,0.18)';ctx.lineWidth=0.8;ctx.stroke();
   }
-  const grad=ctx.createRadialGradient(cx,cy,r*0.25,cx,cy,r*0.55);
-  grad.addColorStop(0,'rgba(15,15,17,1)');grad.addColorStop(1,'rgba(15,15,17,0)');
-  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
-  buildPalette();
+  // círculo central
+  ctx.beginPath();ctx.arc(cx,cy,minR,0,Math.PI*2);
+  ctx.fillStyle='#f0f0f0';ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=0.8;ctx.stroke();
+
+  // puntos de paleta — usar applyAnchorColors para posición correcta
+  if(glbMeshes.length){ applyAnchorColors(true); }
+  else { buildPalette(); }
+
+  // Posición del punto ancla
+  const _p0=palette[0]||{h:baseHue,s:saturation,l:luminosity};
+  const _ri0=ringIdxFromSL(areaSat[0]??_p0.s, areaLum[0]??_p0.l);
+  const _d0=(maxR-_ri0*ringW+maxR-(_ri0+1)*ringW)/2;
+  const _r0=(_p0.h-90)*Math.PI/180;
+  const _ax=cx+Math.cos(_r0)*_d0, _ay=cy+Math.sin(_r0)*_d0;
+
+  // Dibujar dots de áreas aplicadas
   palette.forEach((c,i)=>{
+    const ri=ringIdxFromSL(areaSat[i]??c.s, areaLum[i]??c.l);
+    const oR=maxR-ri*ringW, iR=maxR-(ri+1)*ringW;
+    const dist=(oR+iR)/2;
     const rad=(c.h-90)*Math.PI/180;
-    const dist=r*0.72;
-    const x=cx+Math.cos(rad)*dist,y=cy+Math.sin(rad)*dist;
+    const x=cx+Math.cos(rad)*dist, y=cy+Math.sin(rad)*dist;
     if(i>0){
-      const rad0=(palette[0].h-90)*Math.PI/180;
-      ctx.beginPath();ctx.moveTo(cx+Math.cos(rad0)*dist,cy+Math.sin(rad0)*dist);ctx.lineTo(x,y);
+      ctx.beginPath();ctx.moveTo(_ax,_ay);ctx.lineTo(x,y);
       ctx.strokeStyle='rgba(255,255,255,0.2)';ctx.lineWidth=1;ctx.stroke();
     }
     ctx.beginPath();ctx.arc(x,y,i===0?9:6,0,Math.PI*2);
     ctx.fillStyle=hslCss(c.h,c.s,c.l);ctx.fill();
     ctx.strokeStyle='white';ctx.lineWidth=i===0?2:1.5;ctx.stroke();
   });
+
+  // Dots fantasma para ángulos del esquema no asignados a ningún área
+  // (ej: cuadrado/rectángulo tienen 4 colores pero el producto puede tener 3 áreas)
+  const _isMono=currentScheme==='monocromatico'||currentScheme==='tinte_sombra';
+  if(!_isMono){
+    schemes[currentScheme].angles(baseHue).forEach(h=>{
+      const used=palette.some(c=>Math.abs(((c.h-h)+360)%360)<0.5);
+      if(!used){
+        const ri=ringIdxFromSL(saturation,luminosity);
+        const oR=maxR-ri*ringW, iR=maxR-(ri+1)*ringW;
+        const dist=(oR+iR)/2;
+        const rad=(h-90)*Math.PI/180;
+        const x=cx+Math.cos(rad)*dist, y=cy+Math.sin(rad)*dist;
+        ctx.beginPath();ctx.moveTo(_ax,_ay);ctx.lineTo(x,y);
+        ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);
+        ctx.fillStyle=`hsla(${Math.round(h)},${saturation}%,${luminosity}%,0.35)`;ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    });
+  }
   renderPaletteChips();
   updateThreeColors();
   if(currentExercise)checkExercise();
@@ -248,20 +311,47 @@ function drawWheel(){
 
 let wheelDragging=false;
 const wCanvas=document.getElementById('colorWheel');
-function getAngle(el,e){
+
+function getWheelPos(el,e){
   const rect=el.getBoundingClientRect();
   const sx=el.width/rect.width,sy=el.height/rect.height;
   const cx=el.width/2,cy=el.height/2;
   const ex=e.touches?e.touches[0].clientX:e.clientX;
   const ey=e.touches?e.touches[0].clientY:e.clientY;
-  let a=Math.atan2((ey-rect.top)*sy-cy,(ex-rect.left)*sx-cx)*180/Math.PI+90;
-  if(a<0)a+=360;return a;
+  const px=(ex-rect.left)*sx-cx, py=(ey-rect.top)*sy-cy;
+  let a=Math.atan2(py,px)*180/Math.PI+90; if(a<0)a+=360;
+  return{hue:a, dist:Math.sqrt(px*px+py*py)};
 }
-wCanvas.addEventListener('mousedown',e=>{wheelDragging=true;baseHue=getAngle(wCanvas,e);drawWheel()});
-document.addEventListener('mousemove',e=>{if(wheelDragging){baseHue=getAngle(wCanvas,e);drawWheel()}});
+
+function applyWheelPos(el,e){
+  const{hue,dist}=getWheelPos(el,e);
+  const maxR=el.width/2-3, minR=maxR*0.13;
+  const n=WHEEL_RINGS.length, ringW=(maxR-minR)/n;
+  baseHue=hue;
+  // sólo cambiar S/L si el clic está dentro de la rueda
+  if(dist<=maxR && dist>=minR){
+    const ri=Math.min(Math.floor((maxR-dist)/ringW),n-1);
+    const ring=WHEEL_RINGS[ri];
+    saturation=ring.s; luminosity=ring.l;
+    // sincronizar sliders
+    document.getElementById('satSlider').value=saturation;
+    document.getElementById('lumSlider').value=luminosity;
+    document.getElementById('satVal').textContent=saturation+'%';
+    document.getElementById('lumVal').textContent=luminosity+'%';
+    const sat=document.getElementById('satSlider');
+    const lum=document.getElementById('lumSlider');
+    sat.style.background=`linear-gradient(to right,hsl(${baseHue},10%,50%),hsl(${baseHue},100%,50%))`;
+    lum.style.background=`linear-gradient(to right,#111,hsl(${baseHue},${saturation}%,50%),#eee)`;
+  }
+  drawWheel();
+  if(glbMeshes.length) applyAnchorColors();
+}
+
+wCanvas.addEventListener('mousedown',e=>{wheelDragging=true;applyWheelPos(wCanvas,e)});
+document.addEventListener('mousemove',e=>{if(wheelDragging)applyWheelPos(wCanvas,e)});
 document.addEventListener('mouseup',()=>{wheelDragging=false});
-wCanvas.addEventListener('touchstart',e=>{e.preventDefault();wheelDragging=true;baseHue=getAngle(wCanvas,e);drawWheel()});
-wCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(wheelDragging){baseHue=getAngle(wCanvas,e);drawWheel()}});
+wCanvas.addEventListener('touchstart',e=>{e.preventDefault();wheelDragging=true;applyWheelPos(wCanvas,e)});
+wCanvas.addEventListener('touchmove',e=>{e.preventDefault();if(wheelDragging)applyWheelPos(wCanvas,e)});
 wCanvas.addEventListener('touchend',()=>wheelDragging=false);
 
 function updateSliders(){
@@ -298,7 +388,7 @@ function buildSchemeGrid(){
     btn.innerHTML=`<span class="scheme-icon">${s.icon}</span>${s.label}`;
     btn.onclick=()=>{
       currentScheme=key;
-      colorAssign=[];
+      colorAssign=[]; areaSat=[]; areaLum=[];
       document.querySelectorAll('.scheme-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('schemeInfoName').textContent=s.label.replace(/-?\n/g,'');
@@ -614,7 +704,7 @@ function loadGLB(productKey){
       wrap.scale.setScalar(sc);
       wrap.position.set(-cen.x*sc,-cen.y*sc,-cen.z*sc);
       productGroup.add(wrap);
-      anchorIdx=0; colorAssign=[]; applyAnchorColors(); renderAreaPanel();
+      anchorIdx=0; colorAssign=[]; areaSat=[]; areaLum=[]; applyAnchorColors(); renderAreaPanel();
       return;
     }
     const matGroups={};
@@ -654,7 +744,7 @@ function loadGLB(productKey){
     gltf.scene.position.set(-cen.x*sc,-cen.y*sc,-cen.z*sc);
     productGroup.add(gltf.scene);
     anchorIdx=0;
-    colorAssign=[];
+    colorAssign=[]; areaSat=[]; areaLum=[];
     applyAnchorColors();
     renderAreaPanel();
   }, err=>console.error('GLB error',err));
@@ -695,8 +785,9 @@ function applyAnchorColors(skipPanel=false){
       }
     }
     for(let i=0;i<n;i++){
-      if(i===anchorIdx) pal.push({h:baseHue,s:anchorSat??saturation,l:anchorLum??luminosity});
-      else{ pal.push({h:others[colorAssign[i]%Math.max(others.length,1)],s:saturation,l:luminosity}); }
+      const s=areaSat[i]??saturation, l=areaLum[i]??luminosity;
+      if(i===anchorIdx) pal.push({h:baseHue,s,l});
+      else{ pal.push({h:others[colorAssign[i]%Math.max(others.length,1)],s,l}); }
     }
   }
   palette=pal;
@@ -730,46 +821,58 @@ function renderAreaPanel(){
   const _canCycle=_others.length>1&&currentScheme!=='monocromatico'&&currentScheme!=='tinte_sombra';
   panel.innerHTML=
     "<div class='section-label' style='margin-bottom:8px'>Áreas del producto</div>"+
-    "<div style='font-size:11px;color:var(--text-dim);margin-bottom:10px;line-height:1.5'>Clic en una fila para anclar esa área. Usá ← → para rotar el color de las demás.</div>"+
+    "<div style='font-size:11px;color:var(--text-dim);margin-bottom:10px;line-height:1.5'>Ajustá Sat y Lum por área. Usá ⊙ para anclar el matiz a la rueda.</div>"+
     glbMeshes.map((_,i)=>{
       const c=palette[i]||palette[0];
       const col=hslCss(c.h,c.s,c.l);
       const isA=(i===anchorIdx);
-      const sVal=isA?(anchorSat??saturation):null;
-      const lVal=isA?(anchorLum??luminosity):null;
+      const sVal=areaSat[i]??saturation;
+      const lVal=areaLum[i]??luminosity;
       return`<div style="background:${isA?'#0f1f17':'var(--bg)'};border-radius:7px;border:1px solid ${isA?'#4ade80':'var(--border)'};margin-bottom:5px;overflow:hidden">
-        <div onclick="setAnchor(${i})" style="display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px">
           <div style="width:11px;height:11px;border-radius:3px;background:${col};flex-shrink:0"></div>
           <span style="font-size:11px;color:var(--text-dim);flex:1">${currentAreaNames[i]||'Área '+(i+1)}</span>
-          ${isA?'<span style="font-size:9px;padding:2px 7px;border-radius:10px;background:#1a3a2a;color:#4ade80">ancla</span>':
-            _canCycle?`<button onclick="event.stopPropagation();cycleAreaColor(${i},-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:4px;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">←</button><button onclick="event.stopPropagation();cycleAreaColor(${i},1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:4px;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">→</button>`:''}
+          ${_canCycle&&!isA?`<button onclick="cycleAreaColor(${i},-1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:4px;width:20px;height:20px;font-size:11px;cursor:pointer;padding:0">←</button><button onclick="cycleAreaColor(${i},1)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:4px;width:20px;height:20px;font-size:11px;cursor:pointer;padding:0">→</button>`:''}
+          <button onclick="setAnchor(${i})" title="Anclar a la rueda" style="background:${isA?'#1a3a2a':'var(--surface2)'};border:1px solid ${isA?'#4ade80':'var(--border)'};color:${isA?'#4ade80':'var(--text-dim)'};border-radius:4px;width:22px;height:22px;font-size:13px;cursor:pointer;padding:0;line-height:1">${isA?'◉':'⊙'}</button>
         </div>
-        ${isA?`<div style="padding:2px 10px 10px;display:grid;gap:5px">
+        <div style="padding:2px 10px 10px;display:grid;gap:5px">
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;color:var(--text-dim);width:22px">Sat</span>
             <input type="range" min="0" max="100" value="${sVal}"
-              style="flex:1;accent-color:#4ade80;height:3px"
-              oninput="anchorSat=+this.value;applyAnchorColors(true);document.getElementById('aS').textContent=this.value+'%'" />
-            <span id="aS" style="font-size:10px;color:#4ade80;width:30px;text-align:right">${sVal}%</span>
+              style="flex:1;accent-color:${isA?'#4ade80':'#aaa'};height:3px"
+              oninput="setAreaSat(${i},+this.value)" />
+            <span id="aS_${i}" style="font-size:10px;color:${isA?'#4ade80':'var(--text-dim)'};width:30px;text-align:right">${sVal}%</span>
           </div>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;color:var(--text-dim);width:22px">Lum</span>
             <input type="range" min="5" max="95" value="${lVal}"
-              style="flex:1;accent-color:#4ade80;height:3px"
-              oninput="anchorLum=+this.value;applyAnchorColors(true);document.getElementById('aL').textContent=this.value+'%'" />
-            <span id="aL" style="font-size:10px;color:#4ade80;width:30px;text-align:right">${lVal}%</span>
+              style="flex:1;accent-color:${isA?'#4ade80':'#aaa'};height:3px"
+              oninput="setAreaLum(${i},+this.value)" />
+            <span id="aL_${i}" style="font-size:10px;color:${isA?'#4ade80':'var(--text-dim)'};width:30px;text-align:right">${lVal}%</span>
           </div>
-        </div>`:''}
+        </div>
       </div>`;
     }).join('');
 }
 
+window.setAreaSat=function(i,v){
+  areaSat[i]=v;
+  const el=document.getElementById('aS_'+i); if(el) el.textContent=v+'%';
+  applyAnchorColors(true);
+};
+window.setAreaLum=function(i,v){
+  areaLum[i]=v;
+  const el=document.getElementById('aL_'+i); if(el) el.textContent=v+'%';
+  applyAnchorColors(true);
+};
+
 window.setAnchor=function(idx){
-  if(idx!==anchorIdx){anchorSat=null;anchorLum=null;colorAssign=[];}
+  if(idx!==anchorIdx) colorAssign=[];
   anchorIdx=idx;
   applyAnchorColors();
   drawWheel();
 };
+
 
 window.cycleAreaColor=function(areaIdx,dir){
   const scheme=schemes[currentScheme];
@@ -802,7 +905,7 @@ threeCanvas.addEventListener('mouseup',e=>{
     if((rep._sharedMat&&hit.material===rep._sharedMat)||rep===hit) areaIdx=i;
   });
   if(areaIdx>=0){
-    if(areaIdx!==anchorIdx){anchorSat=null;anchorLum=null;}
+    if(areaIdx!==anchorIdx) colorAssign=[];
     anchorIdx=areaIdx;
     const mat=hit.material;
     if(mat){mat.emissive=new THREE.Color(0x4ade80);mat.emissiveIntensity=0.5;setTimeout(()=>{mat.emissive=new THREE.Color(0);mat.emissiveIntensity=0;},400);}
@@ -855,8 +958,9 @@ function _doPDF(){
     </tr>`;
   }).join('');
 
-  const anchorNote=(anchorSat!==null||anchorLum!==null)
-    ?`<span style="margin-left:20px;color:#555">Ancla — Sat: ${anchorSat??saturation}% / Lum: ${anchorLum??luminosity}%</span>`:'';
+  const anchorNote=areaSat.some(v=>v!==null&&v!==undefined)||areaLum.some(v=>v!==null&&v!==undefined)
+    ?` <span style="margin-left:12px;color:#555">(con ajustes por área)</span>`
+    :'';
 
   document.getElementById('printSheet').innerHTML=`
   <div style="font-family:'Helvetica Neue',Arial,sans-serif;color:#111;max-width:900px;margin:0 auto;padding:14mm">

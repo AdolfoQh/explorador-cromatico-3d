@@ -86,24 +86,121 @@
     @page{size:A4 landscape;margin:0}
   }
 
-  /* MOBILE TABS */
-  .mobile-tabs{display:none;background:var(--surface);border-bottom:1px solid var(--border)}
-  .mobile-tab{flex:1;padding:11px 0;border:none;background:transparent;color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;letter-spacing:.03em}
-  .mobile-tab.active{color:var(--text);border-bottom-color:#fff}
+  /* ── MOBILE LAYOUT ────────────────────────────────────────────────────── */
+  /* Ocultar elementos móviles en desktop */
+  #mobileWheelRow,#mobilePaletteRow,#bgToggle,#presentBtn,
+  #mobileSchemeSheet,#mobilePresentScreen{display:none}
+
   @media(max-width:767px){
-    .mobile-tabs{display:flex}
-    .main{grid-template-columns:1fr!important;height:calc(100dvh - 97px);overflow:hidden}
-    .left-panel{border-right:none;border-bottom:1px solid var(--border);display:none;flex-direction:column;height:100%;overflow-y:auto}
-    .center-panel{display:none;height:100%}
-    .right-panel{border-left:none;display:none;height:100%;overflow-y:auto}
-    .left-panel.mob-active{display:flex}
-    .center-panel.mob-active{display:flex}
-    .right-panel.mob-active{display:flex;flex-direction:column}
-    #threeCanvas{flex:1;min-height:0}
-    .product-tabs{flex-shrink:0}
-    .rotate-hint{bottom:70px}
-    .wheel-wrap canvas{width:180px!important;height:180px!important}
+    /* Layout base */
+    body{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+    .header{flex-shrink:0}
+    .main{flex:1;min-height:0;display:flex!important;flex-direction:column!important;grid-template-columns:unset!important;overflow:hidden}
+    .left-panel,.right-panel{display:none!important}
+    .center-panel{flex:1;min-height:0;display:flex!important;flex-direction:column!important;position:relative}
+    /* Ordenar hijos del center-panel */
+    #mobileWheelRow{order:-2}
+    .product-tabs{order:-1;flex-shrink:0}
+    #threeCanvas{order:0;flex:1;min-height:0;width:100%}
+    .rotate-hint{display:none!important}
+    #mobilePaletteRow{order:1;flex-shrink:0}
+
+    /* Fila superior: rueda + pill */
+    #mobileWheelRow{
+      display:flex!important;flex-direction:column;align-items:center;gap:8px;
+      padding:10px 12px 4px;
+    }
+    /* Pill selector de esquema */
+    #mobileSchemePill{
+      display:flex!important;align-items:center;gap:8px;
+      padding:7px 18px;border-radius:20px;
+      border:1px solid var(--border);background:var(--surface);
+      color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;
+    }
+    /* Paleta horizontal */
+    #mobilePaletteRow{
+      display:flex!important;padding:6px 10px 10px;gap:5px;
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
+    }
+    .m-chip{flex:1;min-width:62px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column;transition:border-color .15s}
+    .m-chip.anchor{border-color:#4ade80}
+    .m-chip.open .m-sliders{display:flex!important}
+    .m-chip-swatch{height:34px;flex-shrink:0}
+    .m-chip-info{background:var(--surface);padding:3px 5px;display:flex;flex-direction:column;gap:1px}
+    .m-chip-area{font-size:9px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .m-chip-hex{font-family:'DM Mono',monospace;font-size:7px;color:var(--text-dim)}
+    .m-sliders{display:none;flex-direction:column;gap:5px;padding:7px;background:var(--bg);border-top:1px solid var(--border)}
+    .m-slider-row{display:flex;align-items:center;gap:5px}
+    .m-slider-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;width:22px}
+    input.m-range{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer}
+    input.m-range::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer}
+    /* Botón fondo */
+    #bgToggle{
+      display:flex!important;position:absolute;bottom:86px;right:10px;z-index:5;
+      width:34px;height:34px;border-radius:50%;
+      border:1px solid var(--border);background:rgba(15,15,17,.85);
+      color:var(--text);font-size:16px;cursor:pointer;
+      align-items:center;justify-content:center;
+    }
+    /* Botón presentar */
+    #presentBtn{
+      display:flex!important;position:absolute;bottom:86px;left:10px;z-index:5;
+      padding:6px 12px;border-radius:16px;
+      border:1px solid var(--border);background:rgba(15,15,17,.85);
+      color:var(--text);font-family:'DM Sans',sans-serif;font-size:10px;
+      cursor:pointer;align-items:center;gap:5px;
+    }
+    /* Modo presentación */
+    body.mob-presenting #mobileWheelRow,
+    body.mob-presenting .product-tabs,
+    body.mob-presenting #mobilePaletteRow,
+    body.mob-presenting #presentBtn{display:none!important}
+    body.mob-presenting #presentBar{display:flex!important}
+    body.mob-presenting #bgToggle{bottom:62px}
+    #presentBar{
+      display:none;order:1;flex-shrink:0;
+      background:var(--surface);border-top:1px solid var(--border);
+      padding:10px 12px;align-items:center;gap:8px;
+    }
+    .pbar-back{
+      padding:8px 14px;border-radius:8px;border:1px solid var(--border);
+      background:var(--surface2);color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;
+    }
+    .pbar-dl{
+      flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);
+      background:var(--surface2);color:var(--text);
+      font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    }
   }
+
+  /* Bottom sheet de esquemas (fixed, funciona dentro del PWA) */
+  #mobileSchemeSheet{
+    position:fixed;inset:0;background:rgba(0,0,0,.72);
+    flex-direction:column;justify-content:flex-end;
+    z-index:200;opacity:0;pointer-events:none;transition:opacity .22s;
+  }
+  #mobileSchemeSheet.open{display:flex!important;opacity:1;pointer-events:all}
+  .mob-sheet-inner{
+    background:var(--surface);border-radius:18px 18px 0 0;
+    border-top:1px solid var(--border);padding:14px 14px 28px;
+    max-height:78vh;overflow-y:auto;
+  }
+  .mob-sheet-handle{width:36px;height:3px;border-radius:2px;background:var(--border);margin:0 auto 14px}
+  .mob-sheet-ttl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px}
+  .mob-scheme-opt{
+    width:100%;display:grid;grid-template-columns:30px 1fr;grid-template-rows:auto auto;
+    column-gap:10px;row-gap:2px;
+    padding:9px 10px;border-radius:8px;border:1px solid transparent;
+    background:transparent;cursor:pointer;text-align:left;margin-bottom:2px;
+  }
+  .mob-scheme-opt:active,.mob-scheme-opt.active{background:var(--surface2);border-color:var(--border)}
+  .mob-scheme-ico{grid-row:1/3;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-dim)}
+  .mob-scheme-opt.active .mob-scheme-ico{color:var(--text)}
+  .mob-scheme-nm{font-size:12px;font-weight:500;color:var(--text-dim);font-family:'DM Sans',sans-serif}
+  .mob-scheme-opt.active .mob-scheme-nm{color:var(--text)}
+  .mob-scheme-ds{font-size:10px;color:var(--text-dim);opacity:.65;line-height:1.3;font-family:'DM Sans',sans-serif}
 </style>
 </head>
 <body>
@@ -114,11 +211,6 @@
     <button class="mode-tab active" id="tabLibre" onclick="setMode('libre')">Exploración libre</button>
     <button class="mode-tab" id="tabEjercicio" onclick="setMode('ejercicio')">Ejercicio guiado</button>
   </div>
-</div>
-<div class="mobile-tabs">
-  <button class="mobile-tab" onclick="setMobileTab('rueda',this)">🎨 Rueda</button>
-  <button class="mobile-tab active" onclick="setMobileTab('3d',this)">📦 3D</button>
-  <button class="mobile-tab" onclick="setMobileTab('paleta',this)">🎨 Paleta</button>
 </div>
 
 <div class="main">
@@ -151,14 +243,33 @@
 
   <!-- CENTER: Three.js canvas -->
   <div class="center-panel">
-    <canvas id="threeCanvas"></canvas>
-    <div class="rotate-hint">← arrastrá para rotar · clic para seleccionar área →</div>
+    <!-- MOBILE: Rueda + pill selector de esquema -->
+    <div id="mobileWheelRow">
+      <canvas id="mobileWheel" width="180" height="180" style="border-radius:50%;cursor:crosshair;display:block"></canvas>
+      <button id="mobileSchemePill" onclick="openMobileSheet()">
+        <span id="mSchemeIcon" style="font-size:15px">◐</span>
+        <span id="mSchemeName">Complementario</span>
+        <span style="color:var(--text-dim);font-size:10px;margin-left:2px">▾</span>
+      </button>
+    </div>
     <div class="product-tabs">
       <button class="product-tab active" onclick="setProduct('silla',this)">Silla</button>
       <button class="product-tab" onclick="setProduct('device',this)">Cafetera</button>
       <button class="product-tab" onclick="setProduct('vehiculo',this)">Vehículo</button>
       <button class="product-tab" onclick="setProduct('lampara',this)">Lámpara</button>
     </div>
+    <canvas id="threeCanvas"></canvas>
+    <div class="rotate-hint">← arrastrá para rotar · clic para seleccionar área →</div>
+    <!-- MOBILE: fondo toggle + presentar -->
+    <button id="bgToggle" onclick="toggleBg()" title="Cambiar fondo">☀</button>
+    <button id="presentBtn" onclick="openPresent()">⤢ Presentar</button>
+    <!-- MOBILE: barra modo presentación -->
+    <div id="presentBar" style="order:1">
+      <button class="pbar-back" onclick="closePresent()">← Volver</button>
+      <button class="pbar-dl" onclick="generatePDF()">⬇ Descargar PDF</button>
+    </div>
+    <!-- MOBILE: paleta horizontal -->
+    <div id="mobilePaletteRow"></div>
   </div>
 
   <!-- RIGHT: palette + areas + exercise -->
@@ -185,6 +296,15 @@
   </div>
 </div>
 <div id="printSheet"></div>
+
+<!-- MOBILE: Bottom sheet selector de esquemas -->
+<div id="mobileSchemeSheet" onclick="closeMobileSheet()">
+  <div class="mob-sheet-inner" onclick="event.stopPropagation()">
+    <div class="mob-sheet-handle"></div>
+    <div class="mob-sheet-ttl">Esquema de color</div>
+    <div id="mobSchemeList"></div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -1073,35 +1193,203 @@ function _doPDF(){
     printImg.onload=()=>setTimeout(()=>window.print(),150);
   }
 }
-// ── MOBILE TABS ───────────────────────────────────────────────────────────
-function setMobileTab(tab,btn){
-  document.querySelectorAll('.mobile-tab').forEach(t=>t.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.querySelector('.left-panel').classList.toggle('mob-active',tab==='rueda');
-  document.querySelector('.center-panel').classList.toggle('mob-active',tab==='3d');
-  document.querySelector('.right-panel').classList.toggle('mob-active',tab==='paleta');
-  if(tab==='3d'){
-    // iOS PWA: el canvas puede tardar en tener dimensiones reales
-    function _tryResize(attempts){
-      const c=document.getElementById('threeCanvas');
-      if(c && c.clientWidth>0 && c.clientHeight>0){
-        if(typeof onResize==='function') onResize();
-      } else if(attempts>0){
-        setTimeout(()=>_tryResize(attempts-1), 100);
+// ── MOBILE ────────────────────────────────────────────────────────────────
+const _isMobile=()=>window.innerWidth<768;
+
+// — Mobile wheel canvas: DPR + handlers —
+(function(){
+  const mw=document.getElementById('mobileWheel');
+  if(!mw) return;
+  const dpr=window.devicePixelRatio||1;
+  const sz=180;
+  mw.width=sz*dpr; mw.height=sz*dpr;
+  mw.style.width=sz+'px'; mw.style.height=sz+'px';
+  let dragging=false;
+  mw.addEventListener('touchstart',e=>{e.preventDefault();dragging=true;applyWheelPos(mw,e)},{passive:false});
+  mw.addEventListener('touchmove',e=>{e.preventDefault();if(dragging)applyWheelPos(mw,e)},{passive:false});
+  mw.addEventListener('touchend',()=>dragging=false);
+  mw.addEventListener('mousedown',e=>{dragging=true;applyWheelPos(mw,e)});
+  document.addEventListener('mousemove',e=>{if(dragging&&_isMobile())applyWheelPos(mw,e)});
+  document.addEventListener('mouseup',()=>dragging=false);
+})();
+
+// — Copiar colorWheel → mobileWheel tras cada drawWheel —
+(function(){
+  const _prev=window.drawWheel;
+  window.drawWheel=function(){
+    _prev();
+    const src=document.getElementById('colorWheel');
+    const dst=document.getElementById('mobileWheel');
+    if(dst&&src){
+      const ctx=dst.getContext('2d');
+      ctx.clearRect(0,0,dst.width,dst.height);
+      ctx.drawImage(src,0,0,dst.width,dst.height);
+    }
+  };
+})();
+
+// — Toque en canvas 3D: área tap en mobile —
+(function(){
+  const tc=document.getElementById('threeCanvas');
+  let _ts={x:0,y:0,t:0};
+  tc.addEventListener('touchstart',e=>{
+    _ts={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};
+  },{passive:true});
+  tc.addEventListener('touchend',e=>{
+    if(!_isMobile()) return;
+    const dt=Date.now()-_ts.t;
+    const dx=e.changedTouches[0].clientX-_ts.x;
+    const dy=e.changedTouches[0].clientY-_ts.y;
+    // tap corto y sin movimiento = selección de área
+    if(dt<300&&Math.sqrt(dx*dx+dy*dy)<10){
+      const rect=tc.getBoundingClientRect();
+      _mp.x=((e.changedTouches[0].clientX-rect.left)/rect.width)*2-1;
+      _mp.y=-((e.changedTouches[0].clientY-rect.top)/rect.height)*2+1;
+      _ray.setFromCamera(_mp,camera);
+      const all=[];
+      productGroup.traverse(c=>{if(c.isMesh)all.push(c)});
+      const hits=_ray.intersectObjects(all,false);
+      if(!hits.length) return;
+      const hit=hits[0].object;
+      let areaIdx=-1;
+      glbMeshes.forEach((rep,i)=>{
+        if((rep._sharedMat&&hit.material===rep._sharedMat)||rep===hit) areaIdx=i;
+      });
+      if(areaIdx>=0){
+        if(areaIdx!==anchorIdx) colorAssign=[];
+        anchorIdx=areaIdx;
+        const mat=hit.material;
+        if(mat){mat.emissive=new THREE.Color(0x4ade80);mat.emissiveIntensity=0.5;setTimeout(()=>{mat.emissive=new THREE.Color(0);mat.emissiveIntensity=0;},400);}
+        applyAnchorColors();
+        drawWheel();
+        renderMobilePalette();
       }
     }
-    setTimeout(()=>_tryResize(10), 80);
+  });
+})();
+
+// — Paleta horizontal mobile (acordeón) —
+function renderMobilePalette(){
+  const row=document.getElementById('mobilePaletteRow');
+  if(!row) return;
+  const openIdx=Array.from(row.querySelectorAll('.m-chip')).findIndex(c=>c.classList.contains('open'));
+  row.innerHTML=palette.map((c,i)=>{
+    const hex=hslToHex(c.h,c.s,c.l);
+    const isA=(i===anchorIdx);
+    const sVal=areaSat[i]??saturation, lVal=areaLum[i]??luminosity;
+    return`<div class="m-chip${isA?' anchor':''}" onclick="toggleMChip(${i},this)">
+      <div class="m-chip-swatch" style="background:${hslCss(c.h,c.s,c.l)}"></div>
+      <div class="m-chip-info">
+        <div class="m-chip-area">${currentAreaNames[i]||'Área '+(i+1)}${isA?' ◉':''}</div>
+        <div class="m-chip-hex">${hex}</div>
+      </div>
+      <div class="m-sliders">
+        <div class="m-slider-row">
+          <span class="m-slider-lbl">Sat</span>
+          <input type="range" class="m-range" min="0" max="100" value="${sVal}"
+            oninput="setAreaSat(${i},+this.value);renderMobilePalette()"
+            onclick="event.stopPropagation()">
+        </div>
+        <div class="m-slider-row">
+          <span class="m-slider-lbl">Lum</span>
+          <input type="range" class="m-range" min="5" max="95" value="${lVal}"
+            oninput="setAreaLum(${i},+this.value);renderMobilePalette()"
+            onclick="event.stopPropagation()">
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  // restaurar estado abierto
+  if(openIdx>=0){
+    const chips=row.querySelectorAll('.m-chip');
+    if(chips[openIdx]) chips[openIdx].classList.add('open');
   }
-  if(tab==='rueda') setTimeout(()=>drawWheel(),50);
 }
-// Inicializar: en mobile, mostrar panel 3D por defecto
-if(window.innerWidth<768){
-  setMobileTab('3d', document.querySelector('.mobile-tab.active'));
-} else {
-  // Desktop: todos los paneles visibles (no mob-active needed)
-  document.querySelector('.left-panel').classList.remove('mob-active');
-  document.querySelector('.center-panel').classList.remove('mob-active');
-  document.querySelector('.right-panel').classList.remove('mob-active');
+
+window.toggleMChip=function(idx,el){
+  const wasOpen=el.classList.contains('open');
+  document.querySelectorAll('.m-chip').forEach(c=>c.classList.remove('open'));
+  if(!wasOpen) el.classList.add('open');
+  // anclar al área tocada
+  if(idx!==anchorIdx){ anchorIdx=idx; colorAssign=[]; applyAnchorColors(); drawWheel(); }
+};
+
+// Patch renderPaletteChips para que también actualice mobile
+(function(){
+  const _prev=window.renderPaletteChips||function(){};
+  window.renderPaletteChips=function(){
+    _prev();
+    if(_isMobile()) renderMobilePalette();
+  };
+})();
+
+// — Fondo blanco/negro —
+let _bgWhite=false;
+window.toggleBg=function(){
+  _bgWhite=!_bgWhite;
+  scene.background=new THREE.Color(_bgWhite?0xffffff:0x141418);
+  document.getElementById('bgToggle').textContent=_bgWhite?'●':'☀';
+};
+
+// — Scheme bottom sheet —
+function _buildMobSchemeList(){
+  const list=document.getElementById('mobSchemeList');
+  if(!list) return;
+  list.innerHTML=Object.entries(schemes).map(([key,s])=>`
+    <button class="mob-scheme-opt${key===currentScheme?' active':''}"
+      onclick="selectMobScheme('${key}')">
+      <span class="mob-scheme-ico">${s.icon}</span>
+      <span class="mob-scheme-nm">${s.label.replace(/\n/g,' ')}</span>
+      <span class="mob-scheme-ds">${s.desc}</span>
+    </button>`).join('');
+}
+window.openMobileSheet=function(){
+  _buildMobSchemeList();
+  document.getElementById('mobileSchemeSheet').classList.add('open');
+};
+window.closeMobileSheet=function(){
+  document.getElementById('mobileSchemeSheet').classList.remove('open');
+};
+window.selectMobScheme=function(key){
+  // Misma lógica que el click de scheme-btn desktop
+  currentScheme=key;
+  colorAssign=[]; areaSat=[]; areaLum=[];
+  document.querySelectorAll('.scheme-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.querySelector(`.scheme-btn`);// se actualiza via buildSchemeGrid
+  document.getElementById('schemeInfoName').textContent=schemes[key].label.replace(/-?\n/g,' ');
+  document.getElementById('schemeInfoDesc').textContent=schemes[key].desc;
+  // Actualizar pill
+  document.getElementById('mSchemeIcon').textContent=schemes[key].icon;
+  document.getElementById('mSchemeName').textContent=schemes[key].label.replace(/\n/g,' ');
+  drawWheel();
+  if(currentExercise) checkExercise();
+  setTimeout(closeMobileSheet,160);
+};
+
+// — Modo presentación —
+window.openPresent=function(){
+  document.body.classList.add('mob-presenting');
+  setTimeout(()=>{if(typeof onResize==='function')onResize();},80);
+};
+window.closePresent=function(){
+  document.body.classList.remove('mob-presenting');
+  setTimeout(()=>{if(typeof onResize==='function')onResize();renderMobilePalette();},80);
+};
+
+// — Init mobile —
+if(_isMobile()){
+  // iOS: esperar a que el canvas tenga dimensiones reales
+  function _tryResizeMob(attempts){
+    const c=document.getElementById('threeCanvas');
+    if(c&&c.clientWidth>0&&c.clientHeight>0){
+      if(typeof onResize==='function') onResize();
+      drawWheel();
+      setTimeout(renderMobilePalette,200);
+    } else if(attempts>0){
+      setTimeout(()=>_tryResizeMob(attempts-1),120);
+    }
+  }
+  setTimeout(()=>_tryResizeMob(12),100);
 }
 
 </script>

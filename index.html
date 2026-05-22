@@ -1309,18 +1309,16 @@ function renderMobilePalette(){
         <div class="m-chip-area">${currentAreaNames[i]||'Área '+(i+1)}${isA?' ◉':''}</div>
         <div class="m-chip-hex">${hex}</div>
       </div>
-      <div class="m-sliders">
+      <div class="m-sliders" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()" ontouchmove="event.stopPropagation()">
         <div class="m-slider-row">
           <span class="m-slider-lbl">Sat</span>
           <input type="range" class="m-range" min="0" max="100" value="${sVal}"
-            oninput="setAreaSat(${i},+this.value);renderMobilePalette()"
-            onclick="event.stopPropagation()">
+            oninput="setAreaSat(${i},+this.value);renderMobilePalette()">
         </div>
         <div class="m-slider-row">
           <span class="m-slider-lbl">Lum</span>
           <input type="range" class="m-range" min="5" max="95" value="${lVal}"
-            oninput="setAreaLum(${i},+this.value);renderMobilePalette()"
-            onclick="event.stopPropagation()">
+            oninput="setAreaLum(${i},+this.value);renderMobilePalette()">
         </div>
       </div>
     </div>`;

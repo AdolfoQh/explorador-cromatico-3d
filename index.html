@@ -159,20 +159,20 @@
     .m-slider-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
     .m-slider-lbl{font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;width:24px}
     .m-slider-val{font-size:10px;color:var(--text-dim);width:32px;text-align:right;font-family:'DM Mono',monospace}
-    input.m-range{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer;touch-action:none}
-    input.m-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-    /* Botón presentar — arriba de la rueda (flujo normal) */
+    /* Restaurar apariencia nativa en iOS para que los sliders se puedan arrastrar */
+    input[type=range]{-webkit-appearance:auto!important;height:auto!important;width:100%}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:auto!important}
+    /* Botón presentar — arriba de la rueda, alineado a la izquierda */
     #presentBtn{
       display:inline-flex!important;align-items:center;gap:5px;
+      align-self:flex-start;
       padding:6px 14px;border-radius:16px;
       border:1px solid var(--border);background:var(--surface);
       color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;
       cursor:pointer;
     }
-    /* Paleta: sin overflow-x para que iOS no capture los touches de los sliders */
+    /* Paleta: sin overflow-x para que los chips sean visibles */
     #mobilePaletteRow{overflow-x:visible;flex-wrap:wrap}
-    /* Sliders: touch-action para que iOS los reconozca como sliders */
-    input.m-range{touch-action:none}
     /* Modo presentación */
     body.mob-presenting #mobileWheelRow,
     body.mob-presenting .product-tabs,
@@ -1311,7 +1311,10 @@ const _isMobile=()=>window.innerWidth<768;
 })();
 
 // — Paleta horizontal mobile —
+let _mobSliderBusy=false; // evita reconstruir el DOM mientras se arrastra un slider
+
 function renderMobilePalette(){
+  if(_mobSliderBusy) return; // no destruir slider mientras se arrastra
   const row=document.getElementById('mobilePaletteRow');
   if(!row) return;
   const openIdx=Array.from(row.querySelectorAll('.m-chip')).findIndex(c=>c.classList.contains('open'));
@@ -1337,6 +1340,7 @@ function _renderAreaControls(i){
   const c=palette[i];
   const isA=(i===anchorIdx);
   const sVal=areaSat[i]??saturation, lVal=areaLum[i]??luminosity;
+  const acc=isA?'#4ade80':'#aaa';
   const _others=schemes[currentScheme].angles(baseHue).slice(1);
   const _canCycle=_others.length>1&&!isA&&currentScheme!=='monocromatico'&&currentScheme!=='tinte_sombra';
   panel.classList.add('visible');
@@ -1350,45 +1354,34 @@ function _renderAreaControls(i){
     </div>
     <div class="m-slider-row">
       <span class="m-slider-lbl">Sat</span>
-      <input type="range" class="m-range" id="mSat${i}" min="0" max="100" value="${sVal}"
-        oninput="setAreaSat(${i},+this.value);document.getElementById('mSatV${i}').textContent=this.value+'%';renderMobilePalette()">
+      <input type="range" id="mSat${i}" min="0" max="100" value="${sVal}"
+        style="flex:1;accent-color:${acc}"
+        oninput="_mSetSat(${i},+this.value)"
+        onchange="renderMobilePalette()">
       <span class="m-slider-val" id="mSatV${i}">${sVal}%</span>
     </div>
     <div class="m-slider-row">
       <span class="m-slider-lbl">Lum</span>
-      <input type="range" class="m-range" id="mLum${i}" min="5" max="95" value="${lVal}"
-        oninput="setAreaLum(${i},+this.value);document.getElementById('mLumV${i}').textContent=this.value+'%';renderMobilePalette()">
+      <input type="range" id="mLum${i}" min="5" max="95" value="${lVal}"
+        style="flex:1;accent-color:${acc}"
+        oninput="_mSetLum(${i},+this.value)"
+        onchange="renderMobilePalette()">
       <span class="m-slider-val" id="mLumV${i}">${lVal}%</span>
     </div>`;
-  _patchRangeTouches();
 }
 window._renderAreaControls=_renderAreaControls;
 
-// Touch custom para sliders en iOS
-function _patchRangeTouches(){
-  document.querySelectorAll('.m-range').forEach(input=>{
-    if(input._patched) return;
-    input._patched=true;
-    // passive:false en touchstart para poder llamar preventDefault
-    input.addEventListener('touchstart',e=>{
-      e.preventDefault();
-      e.stopPropagation();
-    },{passive:false});
-    input.addEventListener('touchmove',e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      const rect=input.getBoundingClientRect();
-      const ratio=Math.max(0,Math.min(1,(e.touches[0].clientX-rect.left)/rect.width));
-      const val=Math.round(+input.min+ratio*(+input.max-+input.min));
-      input.value=val;
-      input.dispatchEvent(new Event('input'));
-    },{passive:false});
-    input.addEventListener('touchend',e=>{
-      e.preventDefault();
-      e.stopPropagation();
-    },{passive:false});
-  });
-}
+// Setters móviles: actualizan color 3D sin reconstruir el DOM durante el drag
+window._mSetSat=function(i,v){
+  areaSat[i]=v;
+  const el=document.getElementById('mSatV'+i); if(el) el.textContent=v+'%';
+  _mobSliderBusy=true; applyAnchorColors(true); _mobSliderBusy=false;
+};
+window._mSetLum=function(i,v){
+  areaLum[i]=v;
+  const el=document.getElementById('mLumV'+i); if(el) el.textContent=v+'%';
+  _mobSliderBusy=true; applyAnchorColors(true); _mobSliderBusy=false;
+};
 
 window.toggleMChip=function(idx,el){
   const wasOpen=el.classList.contains('open');

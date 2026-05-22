@@ -207,10 +207,6 @@
 
 <div class="header">
   <div class="header-title">Explorador <span>Cromático 3D</span> — FAD UNCUYO</div>
-  <div class="mode-tabs">
-    <button class="mode-tab active" id="tabLibre" onclick="setMode('libre')">Exploración libre</button>
-    <button class="mode-tab" id="tabEjercicio" onclick="setMode('ejercicio')">Ejercicio guiado</button>
-  </div>
 </div>
 
 <div class="main">
@@ -738,12 +734,29 @@ function checkExercise(){
 
 // ── RESIZE ─────────────────────────────────────────────────────────────────
 function resize(){
-  const center=document.querySelector('.center-panel');
-  const w=center.clientWidth, h=center.clientHeight-48;
-  renderer.setSize(w,h);
-  camera.aspect=w/h;
+  let w,h;
+  if(window.innerWidth<768){
+    // Mobile: usar dimensiones reales del canvas (flex:1 lo dimensiona CSS)
+    w=threeCanvas.clientWidth||window.innerWidth||1;
+    h=threeCanvas.clientHeight||1;
+    if(h<10){
+      // Canvas aún sin altura: estimar el espacio disponible
+      const headerH=document.querySelector('.header')?.clientHeight||44;
+      const wheelH=document.getElementById('mobileWheelRow')?.clientHeight||220;
+      const tabsH=document.querySelector('.product-tabs')?.clientHeight||44;
+      const paletteH=document.getElementById('mobilePaletteRow')?.clientHeight||80;
+      h=Math.max((window.innerHeight-headerH-wheelH-tabsH-paletteH),120);
+      w=window.innerWidth;
+    }
+  } else {
+    const center=document.querySelector('.center-panel');
+    w=center.clientWidth; h=center.clientHeight-48;
+  }
+  renderer.setSize(w,Math.max(h,1));
+  camera.aspect=w/Math.max(h,1);
   camera.updateProjectionMatrix();
 }
+const onResize=resize;
 window.addEventListener('resize',resize);
 
 // ── RENDER LOOP ────────────────────────────────────────────────────────────
@@ -1110,6 +1123,8 @@ function _initApp(){
   drawWheel();
   updateSliders();
   animate();
+  // Cargar producto inicial
+  rebuildProduct();
 }
 setTimeout(_initApp, 100);
 
@@ -1382,9 +1397,10 @@ if(_isMobile()){
   function _tryResizeMob(attempts){
     const c=document.getElementById('threeCanvas');
     if(c&&c.clientWidth>0&&c.clientHeight>0){
-      if(typeof onResize==='function') onResize();
+      resize();
       drawWheel();
-      setTimeout(renderMobilePalette,200);
+      if(!glbMeshes.length) rebuildProduct();
+      setTimeout(renderMobilePalette,400);
     } else if(attempts>0){
       setTimeout(()=>_tryResizeMob(attempts-1),120);
     }

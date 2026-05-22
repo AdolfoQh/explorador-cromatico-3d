@@ -122,6 +122,7 @@
     .canvas-wrap{order:0;flex:1;min-height:0}
     .rotate-hint{display:none!important}
     #mobilePaletteRow{order:1;flex-shrink:0}
+    #mAreaControls{order:2;flex-shrink:0}
 
     /* Fila superior: rueda + pill */
     #mobileWheelRow{
@@ -140,18 +141,26 @@
       display:flex!important;padding:6px 10px 10px;gap:5px;
       overflow-x:auto;-webkit-overflow-scrolling:touch;
     }
-    .m-chip{flex:1;min-width:62px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column;transition:border-color .15s}
+    .m-chip{flex:1;min-width:58px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column;transition:border-color .15s}
     .m-chip.anchor{border-color:#4ade80}
-    .m-chip.open .m-sliders{display:flex!important}
-    .m-chip-swatch{height:34px;flex-shrink:0}
+    .m-chip.open{border-color:#aaa}
+    .m-chip-swatch{height:32px;flex-shrink:0}
     .m-chip-info{background:var(--surface);padding:3px 5px;display:flex;flex-direction:column;gap:1px}
     .m-chip-area{font-size:9px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .m-chip-hex{font-family:'DM Mono',monospace;font-size:7px;color:var(--text-dim)}
-    .m-sliders{display:none;flex-direction:column;gap:5px;padding:7px;background:var(--bg);border-top:1px solid var(--border)}
-    .m-slider-row{display:flex;align-items:center;gap:5px}
-    .m-slider-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;width:22px}
-    input.m-range{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer}
-    input.m-range::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer}
+    /* Panel de controles de área (debajo de la paleta) */
+    #mAreaControls{display:none;flex-shrink:0;padding:8px 10px 10px;background:var(--bg);border-top:1px solid var(--border)}
+    #mAreaControls.visible{display:block}
+    .m-area-header{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+    .m-area-swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+    .m-area-name{font-size:11px;color:var(--text);flex:1;font-family:'DM Sans',sans-serif}
+    .m-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:5px;font-size:11px;cursor:pointer;padding:3px 8px;line-height:1.4}
+    .m-btn.anchor-on{background:#1a3a2a;border-color:#4ade80;color:#4ade80}
+    .m-slider-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+    .m-slider-lbl{font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;width:24px}
+    .m-slider-val{font-size:10px;color:var(--text-dim);width:32px;text-align:right;font-family:'DM Mono',monospace}
+    input.m-range{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer;touch-action:none}
+    input.m-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4)}
     /* Botón presentar — dentro del canvas-wrap */
     #presentBtn{
       display:flex!important;position:absolute;top:8px;left:8px;z-index:5;
@@ -281,6 +290,8 @@
     </div>
     <!-- MOBILE: paleta horizontal -->
     <div id="mobilePaletteRow"></div>
+    <!-- MOBILE: controles del área seleccionada -->
+    <div id="mAreaControls"></div>
   </div>
 
   <!-- RIGHT: palette + areas + exercise -->
@@ -1152,10 +1163,10 @@ function generatePDF(){
 function _doPDF(){
   const canvas=document.getElementById('threeCanvas');
   // forzar fondo opaco para que toDataURL no tenga alpha transparente
-  renderer.setClearColor(0x0d1117,1);
+  renderer.setClearColor(_bgWhite?0xffffff:0x0d1117,1);
   renderer.render(scene,camera);
   const imgData=canvas.toDataURL('image/png');
-  renderer.setClearColor(0x000000,0); // restaurar transparente
+  renderer.setClearColor(0x000000,0); // restaurar
   const productNames={silla:'Silla',device:'Cafetera',vehiculo:'Vehículo',lampara:'Lámpara'};
   const productName=productNames[currentProduct]||currentProduct;
   const schemeName=document.getElementById('schemeInfoName').textContent||schemes[currentScheme].label.replace(/\n/g,'');
@@ -1195,7 +1206,7 @@ function _doPDF(){
     </div>
     <div style="display:flex;gap:26px;align-items:flex-start">
       <div style="flex-shrink:0">
-        <img src="${imgData}" style="width:260px;height:260px;object-fit:contain;border-radius:10px;background:#111;display:block" />
+        <img src="${imgData}" style="width:260px;height:260px;object-fit:contain;border-radius:10px;background:${_bgWhite?'#fff':'#111'};display:block" />
       </div>
       <div style="flex:1">
         <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-radius:8px;overflow:hidden">
@@ -1299,7 +1310,7 @@ const _isMobile=()=>window.innerWidth<768;
   });
 })();
 
-// — Paleta horizontal mobile (acordeón) —
+// — Paleta horizontal mobile —
 function renderMobilePalette(){
   const row=document.getElementById('mobilePaletteRow');
   if(!row) return;
@@ -1307,40 +1318,84 @@ function renderMobilePalette(){
   row.innerHTML=palette.map((c,i)=>{
     const hex=hslToHex(c.h,c.s,c.l);
     const isA=(i===anchorIdx);
-    const sVal=areaSat[i]??saturation, lVal=areaLum[i]??luminosity;
-    return`<div class="m-chip${isA?' anchor':''}" onclick="toggleMChip(${i},this)">
+    return`<div class="m-chip${isA?' anchor':''}${openIdx===i?' open':''}" onclick="toggleMChip(${i},this)">
       <div class="m-chip-swatch" style="background:${hslCss(c.h,c.s,c.l)}"></div>
       <div class="m-chip-info">
         <div class="m-chip-area">${currentAreaNames[i]||'Área '+(i+1)}${isA?' ◉':''}</div>
         <div class="m-chip-hex">${hex}</div>
       </div>
-      <div class="m-sliders" onclick="event.stopPropagation()" ontouchstart="event.stopPropagation()" ontouchmove="event.stopPropagation()">
-        <div class="m-slider-row">
-          <span class="m-slider-lbl">Sat</span>
-          <input type="range" class="m-range" min="0" max="100" value="${sVal}"
-            oninput="setAreaSat(${i},+this.value);renderMobilePalette()">
-        </div>
-        <div class="m-slider-row">
-          <span class="m-slider-lbl">Lum</span>
-          <input type="range" class="m-range" min="5" max="95" value="${lVal}"
-            oninput="setAreaLum(${i},+this.value);renderMobilePalette()">
-        </div>
-      </div>
     </div>`;
   }).join('');
-  // restaurar estado abierto
-  if(openIdx>=0){
-    const chips=row.querySelectorAll('.m-chip');
-    if(chips[openIdx]) chips[openIdx].classList.add('open');
-  }
+  // Renderizar panel de controles si hay uno abierto
+  if(openIdx>=0) _renderAreaControls(openIdx);
+  else { const p=document.getElementById('mAreaControls'); if(p){p.innerHTML='';p.classList.remove('visible');} }
+}
+
+function _renderAreaControls(i){
+  const panel=document.getElementById('mAreaControls');
+  if(!panel||!palette[i]) return;
+  const c=palette[i];
+  const isA=(i===anchorIdx);
+  const sVal=areaSat[i]??saturation, lVal=areaLum[i]??luminosity;
+  const _others=schemes[currentScheme].angles(baseHue).slice(1);
+  const _canCycle=_others.length>1&&!isA&&currentScheme!=='monocromatico'&&currentScheme!=='tinte_sombra';
+  panel.classList.add('visible');
+  panel.innerHTML=`
+    <div class="m-area-header">
+      <div class="m-area-swatch" style="background:${hslCss(c.h,c.s,c.l)}"></div>
+      <span class="m-area-name">${currentAreaNames[i]||'Área '+(i+1)}</span>
+      ${_canCycle?`<button class="m-btn" onclick="cycleAreaColor(${i},-1);_renderAreaControls(${i})">←</button>
+                  <button class="m-btn" onclick="cycleAreaColor(${i},1);_renderAreaControls(${i})">→</button>`:''}
+      <button class="m-btn${isA?' anchor-on':''}" onclick="setAnchorMob(${i})">${isA?'◉ ancla':'⊙ ancla'}</button>
+    </div>
+    <div class="m-slider-row">
+      <span class="m-slider-lbl">Sat</span>
+      <input type="range" class="m-range" id="mSat${i}" min="0" max="100" value="${sVal}"
+        oninput="setAreaSat(${i},+this.value);document.getElementById('mSatV${i}').textContent=this.value+'%';renderMobilePalette()">
+      <span class="m-slider-val" id="mSatV${i}">${sVal}%</span>
+    </div>
+    <div class="m-slider-row">
+      <span class="m-slider-lbl">Lum</span>
+      <input type="range" class="m-range" id="mLum${i}" min="5" max="95" value="${lVal}"
+        oninput="setAreaLum(${i},+this.value);document.getElementById('mLumV${i}').textContent=this.value+'%';renderMobilePalette()">
+      <span class="m-slider-val" id="mLumV${i}">${lVal}%</span>
+    </div>`;
+  _patchRangeTouches();
+}
+window._renderAreaControls=_renderAreaControls;
+
+// Touch custom para sliders en iOS (bypassa comportamiento nativo roto)
+function _patchRangeTouches(){
+  document.querySelectorAll('.m-range').forEach(input=>{
+    if(input._patched) return;
+    input._patched=true;
+    input.addEventListener('touchstart',e=>{e.stopPropagation();},{passive:true});
+    input.addEventListener('touchmove',e=>{
+      e.stopPropagation();
+      e.preventDefault();
+      const rect=input.getBoundingClientRect();
+      const ratio=Math.max(0,Math.min(1,(e.touches[0].clientX-rect.left)/rect.width));
+      const val=Math.round(+input.min+ratio*(+input.max-+input.min));
+      input.value=val;
+      input.dispatchEvent(new Event('input'));
+    },{passive:false});
+  });
 }
 
 window.toggleMChip=function(idx,el){
   const wasOpen=el.classList.contains('open');
   document.querySelectorAll('.m-chip').forEach(c=>c.classList.remove('open'));
-  if(!wasOpen) el.classList.add('open');
-  // anclar al área tocada
+  const panel=document.getElementById('mAreaControls');
+  if(wasOpen){ if(panel){panel.innerHTML='';panel.classList.remove('visible');} return; }
+  el.classList.add('open');
+  // Anclar al área tocada
   if(idx!==anchorIdx){ anchorIdx=idx; colorAssign=[]; applyAnchorColors(); drawWheel(); }
+  _renderAreaControls(idx);
+};
+
+window.setAnchorMob=function(i){
+  anchorIdx=i; colorAssign=[]; areaSat=[]; areaLum=[];
+  applyAnchorColors(); drawWheel(); _renderAreaControls(i);
 };
 
 // Patch renderPaletteChips para que también actualice mobile
@@ -1368,7 +1423,7 @@ function _buildMobSchemeList(){
     <button class="mob-scheme-opt${key===currentScheme?' active':''}"
       onclick="selectMobScheme('${key}')">
       <span class="mob-scheme-ico">${s.icon}</span>
-      <span class="mob-scheme-nm">${s.label.replace(/\n/g,' ')}</span>
+      <span class="mob-scheme-nm">${s.label.replace(/-?\n/g,'')}</span>
       <span class="mob-scheme-ds">${s.desc}</span>
     </button>`).join('');
 }
@@ -1389,7 +1444,7 @@ window.selectMobScheme=function(key){
   document.getElementById('schemeInfoDesc').textContent=schemes[key].desc;
   // Actualizar pill
   document.getElementById('mSchemeIcon').textContent=schemes[key].icon;
-  document.getElementById('mSchemeName').textContent=schemes[key].label.replace(/\n/g,' ');
+  document.getElementById('mSchemeName').textContent=schemes[key].label.replace(/-?\n/g,'');
   drawWheel();
   if(currentExercise) checkExercise();
   setTimeout(closeMobileSheet,160);

@@ -187,6 +187,7 @@
 <div id="printSheet"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
 let baseHue=200, saturation=70, luminosity=50;
@@ -980,12 +981,17 @@ const _oDW=drawWheel;
 window.drawWheel=function(){_oDW();if(glbMeshes.length)applyAnchorColors();};
 
 buildSchemeGrid();
-setTimeout(()=>{
+// Esperar a que Three.js + GLTFLoader estén listos (crítico en iOS PWA)
+function _initApp(){
+  if(typeof THREE==='undefined'||!THREE.GLTFLoader){
+    setTimeout(_initApp,100); return;
+  }
   resize();
   drawWheel();
   updateSliders();
   animate();
-},50);
+}
+setTimeout(_initApp, 100);
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
 function generatePDF(){
@@ -1099,8 +1105,6 @@ if(window.innerWidth<768){
 }
 
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {

@@ -91,11 +91,18 @@
   #mobileWheelRow,#mobilePaletteRow,#presentBtn,
   #mobileSchemeSheet,#mobilePresentScreen{display:none}
 
-  /* Toggle fondo — visible en desktop, esquina superior derecha del canvas */
+  /* Canvas wrapper — posiciona botones relativos al canvas */
+  .canvas-wrap{
+    position:relative;flex:1;min-height:0;
+    display:flex;flex-direction:column;
+  }
+  #threeCanvas{flex:1;min-height:0;width:100%;display:block}
+
+  /* Toggle fondo — esquina superior derecha del canvas, visible en desktop y mobile */
   #bgToggle{
     display:flex;position:absolute;top:10px;right:10px;z-index:5;
     width:32px;height:32px;border-radius:50%;
-    border:1px solid var(--border);background:rgba(15,15,17,.85);
+    border:1px solid rgba(255,255,255,.18);background:rgba(15,15,17,.8);
     color:var(--text);font-size:15px;cursor:pointer;
     align-items:center;justify-content:center;
     transition:border-color .2s;
@@ -112,7 +119,7 @@
     /* Ordenar hijos del center-panel */
     #mobileWheelRow{order:-2}
     .product-tabs{order:-1;flex-shrink:0}
-    #threeCanvas{order:0;flex:1;min-height:0;width:100%}
+    .canvas-wrap{order:0;flex:1;min-height:0}
     .rotate-hint{display:none!important}
     #mobilePaletteRow{order:1;flex-shrink:0}
 
@@ -145,15 +152,7 @@
     .m-slider-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;width:22px}
     input.m-range{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer}
     input.m-range::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;cursor:pointer}
-    /* Botón fondo */
-    #bgToggle{
-      display:flex!important;position:absolute;top:8px;right:8px;z-index:5;
-      width:32px;height:32px;border-radius:50%;
-      border:1px solid rgba(255,255,255,.15);background:rgba(15,15,17,.75);
-      color:var(--text);font-size:15px;cursor:pointer;
-      align-items:center;justify-content:center;
-    }
-    /* Botón presentar */
+    /* Botón presentar — dentro del canvas-wrap */
     #presentBtn{
       display:flex!important;position:absolute;top:8px;left:8px;z-index:5;
       padding:5px 11px;border-radius:14px;
@@ -161,13 +160,16 @@
       color:var(--text);font-family:'DM Sans',sans-serif;font-size:10px;
       cursor:pointer;align-items:center;gap:5px;
     }
+    /* Paleta: sin overflow-x para que iOS no capture los touches de los sliders */
+    #mobilePaletteRow{overflow-x:visible;flex-wrap:wrap}
+    /* Sliders: touch-action para que iOS los reconozca como sliders */
+    input.m-range{touch-action:none}
     /* Modo presentación */
     body.mob-presenting #mobileWheelRow,
     body.mob-presenting .product-tabs,
     body.mob-presenting #mobilePaletteRow,
     body.mob-presenting #presentBtn{display:none!important}
     body.mob-presenting #presentBar{display:flex!important}
-    body.mob-presenting #bgToggle{top:8px;right:8px}
     #presentBar{
       display:none;order:1;flex-shrink:0;
       background:var(--surface);border-top:1px solid var(--border);
@@ -265,11 +267,13 @@
       <button class="product-tab" onclick="setProduct('vehiculo',this)">Vehículo</button>
       <button class="product-tab" onclick="setProduct('lampara',this)">Lámpara</button>
     </div>
-    <canvas id="threeCanvas"></canvas>
-    <div class="rotate-hint">← arrastrá para rotar · clic para seleccionar área →</div>
-    <!-- MOBILE: fondo toggle + presentar -->
-    <button id="bgToggle" onclick="toggleBg()" title="Cambiar fondo">☀</button>
-    <button id="presentBtn" onclick="openPresent()">⤢ Presentar</button>
+    <!-- Canvas wrapper: contiene el canvas + botones superpuestos -->
+    <div class="canvas-wrap">
+      <canvas id="threeCanvas"></canvas>
+      <div class="rotate-hint">← arrastrá para rotar · clic para seleccionar área →</div>
+      <button id="bgToggle" onclick="toggleBg()" title="Cambiar fondo">☀</button>
+      <button id="presentBtn" onclick="openPresent()">⤢ Presentar</button>
+    </div>
     <!-- MOBILE: barra modo presentación -->
     <div id="presentBar" style="order:1">
       <button class="pbar-back" onclick="closePresent()">← Volver</button>
@@ -747,9 +751,10 @@ function checkExercise(){
 function resize(){
   let w,h;
   if(window.innerWidth<768){
-    // Mobile: usar dimensiones reales del canvas (flex:1 lo dimensiona CSS)
-    w=threeCanvas.clientWidth||window.innerWidth||1;
-    h=threeCanvas.clientHeight||1;
+    // Mobile: usar canvas-wrap (contiene el canvas con flex:1)
+    const wrap=document.querySelector('.canvas-wrap');
+    w=(wrap?wrap.clientWidth:threeCanvas.clientWidth)||window.innerWidth||1;
+    h=(wrap?wrap.clientHeight:threeCanvas.clientHeight)||1;
     if(h<10){
       // Canvas aún sin altura: estimar el espacio disponible
       const headerH=document.querySelector('.header')?.clientHeight||44;

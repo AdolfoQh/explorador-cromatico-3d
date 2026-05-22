@@ -87,9 +87,20 @@
   }
 
   /* ── MOBILE LAYOUT ────────────────────────────────────────────────────── */
-  /* Ocultar elementos móviles en desktop */
-  #mobileWheelRow,#mobilePaletteRow,#bgToggle,#presentBtn,
+  /* Ocultar elementos exclusivamente móviles en desktop */
+  #mobileWheelRow,#mobilePaletteRow,#presentBtn,
   #mobileSchemeSheet,#mobilePresentScreen{display:none}
+
+  /* Toggle fondo — visible en desktop, esquina inferior derecha del canvas */
+  #bgToggle{
+    display:flex;position:absolute;bottom:54px;right:10px;z-index:5;
+    width:32px;height:32px;border-radius:50%;
+    border:1px solid var(--border);background:rgba(15,15,17,.85);
+    color:var(--text);font-size:15px;cursor:pointer;
+    align-items:center;justify-content:center;
+    transition:border-color .2s;
+  }
+  #bgToggle:hover{border-color:#aaa}
 
   @media(max-width:767px){
     /* Layout base */

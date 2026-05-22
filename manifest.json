@@ -1,0 +1,38 @@
+{
+  "name": "Explorador Cromático 3D",
+  "short_name": "Cromático 3D",
+  "description": "Herramienta de teoría del color para diseño industrial — FAD UNCUYO",
+  "start_url": "/explorador-cromatico-3d/",
+  "scope": "/explorador-cromatico-3d/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f0f11",
+  "theme_color": "#0f0f11",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -629,6 +629,11 @@ window.addEventListener('resize',resize);
 let _captureNext=null;
 function animate(){
   requestAnimationFrame(animate);
+  // iOS PWA: auto-resize si el canvas no tiene dimensiones correctas
+  if(threeCanvas.clientWidth>0&&threeCanvas.clientHeight>0&&
+     Math.abs(renderer.domElement.width-Math.round(threeCanvas.clientWidth*(window.devicePixelRatio||1)))>4){
+    onResize();
+  }
   if(autoRotate) rotY+=0.004;
   productGroup.rotation.y=rotY;
   productGroup.rotation.x=rotX;
@@ -1069,7 +1074,18 @@ function setMobileTab(tab,btn){
   document.querySelector('.left-panel').classList.toggle('mob-active',tab==='rueda');
   document.querySelector('.center-panel').classList.toggle('mob-active',tab==='3d');
   document.querySelector('.right-panel').classList.toggle('mob-active',tab==='paleta');
-  if(tab==='3d') setTimeout(()=>{ if(typeof onResize==='function') onResize(); },80);
+  if(tab==='3d'){
+    // iOS PWA: el canvas puede tardar en tener dimensiones reales
+    function _tryResize(attempts){
+      const c=document.getElementById('threeCanvas');
+      if(c && c.clientWidth>0 && c.clientHeight>0){
+        if(typeof onResize==='function') onResize();
+      } else if(attempts>0){
+        setTimeout(()=>_tryResize(attempts-1), 100);
+      }
+    }
+    setTimeout(()=>_tryResize(10), 80);
+  }
   if(tab==='rueda') setTimeout(()=>drawWheel(),50);
 }
 // Inicializar: en mobile, mostrar panel 3D por defecto

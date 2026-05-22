@@ -161,13 +161,13 @@
     .m-slider-val{font-size:10px;color:var(--text-dim);width:32px;text-align:right;font-family:'DM Mono',monospace}
     input.m-range{-webkit-appearance:none;flex:1;height:3px;border-radius:2px;background:#333;outline:none;cursor:pointer;touch-action:none}
     input.m-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.4)}
-    /* Botón presentar — dentro del canvas-wrap */
+    /* Botón presentar — arriba de la rueda (flujo normal) */
     #presentBtn{
-      display:flex!important;position:absolute;top:8px;left:8px;z-index:5;
-      padding:5px 11px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.15);background:rgba(15,15,17,.75);
-      color:var(--text);font-family:'DM Sans',sans-serif;font-size:10px;
-      cursor:pointer;align-items:center;gap:5px;
+      display:inline-flex!important;align-items:center;gap:5px;
+      padding:6px 14px;border-radius:16px;
+      border:1px solid var(--border);background:var(--surface);
+      color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;
+      cursor:pointer;
     }
     /* Paleta: sin overflow-x para que iOS no capture los touches de los sliders */
     #mobilePaletteRow{overflow-x:visible;flex-wrap:wrap}
@@ -177,7 +177,7 @@
     body.mob-presenting #mobileWheelRow,
     body.mob-presenting .product-tabs,
     body.mob-presenting #mobilePaletteRow,
-    body.mob-presenting #presentBtn{display:none!important}
+    body.mob-presenting #mAreaControls{display:none!important}
     body.mob-presenting #presentBar{display:flex!important}
     #presentBar{
       display:none;order:1;flex-shrink:0;
@@ -263,6 +263,7 @@
   <div class="center-panel">
     <!-- MOBILE: Rueda + pill selector de esquema -->
     <div id="mobileWheelRow">
+      <button id="presentBtn" onclick="openPresent()">⤢ Presentar</button>
       <canvas id="mobileWheel" width="180" height="180" style="border-radius:50%;cursor:crosshair;display:block"></canvas>
       <button id="mobileSchemePill" onclick="openMobileSheet()">
         <span id="mSchemeIcon" style="font-size:15px">◐</span>
@@ -281,7 +282,6 @@
       <canvas id="threeCanvas"></canvas>
       <div class="rotate-hint">← arrastrá para rotar · clic para seleccionar área →</div>
       <button id="bgToggle" onclick="toggleBg()" title="Cambiar fondo">☀</button>
-      <button id="presentBtn" onclick="openPresent()">⤢ Presentar</button>
     </div>
     <!-- MOBILE: barra modo presentación -->
     <div id="presentBar" style="order:1">
@@ -1364,20 +1364,28 @@ function _renderAreaControls(i){
 }
 window._renderAreaControls=_renderAreaControls;
 
-// Touch custom para sliders en iOS (bypassa comportamiento nativo roto)
+// Touch custom para sliders en iOS
 function _patchRangeTouches(){
   document.querySelectorAll('.m-range').forEach(input=>{
     if(input._patched) return;
     input._patched=true;
-    input.addEventListener('touchstart',e=>{e.stopPropagation();},{passive:true});
-    input.addEventListener('touchmove',e=>{
-      e.stopPropagation();
+    // passive:false en touchstart para poder llamar preventDefault
+    input.addEventListener('touchstart',e=>{
       e.preventDefault();
+      e.stopPropagation();
+    },{passive:false});
+    input.addEventListener('touchmove',e=>{
+      e.preventDefault();
+      e.stopPropagation();
       const rect=input.getBoundingClientRect();
       const ratio=Math.max(0,Math.min(1,(e.touches[0].clientX-rect.left)/rect.width));
       const val=Math.round(+input.min+ratio*(+input.max-+input.min));
       input.value=val;
       input.dispatchEvent(new Event('input'));
+    },{passive:false});
+    input.addEventListener('touchend',e=>{
+      e.preventDefault();
+      e.stopPropagation();
     },{passive:false});
   });
 }

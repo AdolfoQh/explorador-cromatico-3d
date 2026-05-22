@@ -143,30 +143,37 @@
       border:1px solid var(--border);background:var(--surface);
       color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;
     }
-    /* Paleta: lista vertical de tarjetas de área */
+    /* Paleta: chips en fila horizontal, cada uno con sus controles adentro */
     #mobilePaletteRow{
-      display:flex!important;flex-direction:column;
-      padding:4px 10px 6px;gap:0;
-      background:var(--bg);border-top:1px solid var(--border);
+      display:flex!important;flex-direction:row;
+      padding:5px 8px 8px;gap:5px;
+      border-top:1px solid var(--border);
+      overflow-x:auto;-webkit-overflow-scrolling:touch;
     }
-    .m-area-card{padding:6px 2px 5px;border-bottom:1px solid var(--border);border-left:2px solid transparent;padding-left:6px}
-    .m-area-card:last-child{border-bottom:none}
-    .m-area-card.anch{border-left-color:#4ade80}
-    .m-area-r1{display:flex;align-items:center;gap:5px;margin-bottom:4px}
-    .m-area-sw{width:13px;height:13px;border-radius:3px;flex-shrink:0}
-    .m-area-nm{font-size:11px;color:var(--text);flex:1;font-family:'DM Sans',sans-serif}
-    .m-abtn{background:var(--surface2);border:1px solid var(--border);color:var(--text-dim);border-radius:4px;font-size:11px;cursor:pointer;padding:2px 6px;line-height:1.5;flex-shrink:0}
-    .m-abtn.anch{background:#1a3a2a;border-color:#4ade80;color:#4ade80}
-    .m-abtn:disabled{opacity:.25;cursor:default}
-    .m-area-r2{display:flex;align-items:center;gap:3px}
-    .m-slbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;width:9px;flex-shrink:0}
-    .m-sval{font-size:9px;color:var(--text-dim);width:22px;text-align:right;font-family:'DM Mono',monospace;flex-shrink:0}
-    .m-sdiv{width:1px;height:10px;background:var(--border);flex-shrink:0;margin:0 4px}
-    .m-area-r2 input[type=range]{flex:1;min-width:0;accent-color:#888}
+    .m-chip{
+      flex:1;min-width:72px;border-radius:8px;overflow:hidden;
+      border:1px solid var(--border);display:flex;flex-direction:column;
+      background:var(--surface);transition:border-color .15s;
+    }
+    .m-chip.anchor{border-color:#4ade80}
+    .m-chip-swatch{height:26px;flex-shrink:0}
+    .m-chip-body{padding:3px 4px 4px;display:flex;flex-direction:column;gap:2px}
+    .m-chip-r1{display:flex;align-items:center;gap:2px;margin-bottom:1px}
+    .m-chip-nm{font-size:8px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'DM Sans',sans-serif}
+    .m-cabtn{
+      background:transparent;border:none;
+      color:var(--text-dim);font-size:10px;cursor:pointer;
+      padding:0 2px;line-height:1.4;flex-shrink:0;
+    }
+    .m-cabtn.anch{color:#4ade80}
+    .m-cabtn:disabled{opacity:.2;cursor:default}
+    .m-chip-sl{display:flex;align-items:center;gap:2px}
+    .m-clbl{font-size:8px;color:var(--text-dim);font-family:'DM Mono',monospace;flex-shrink:0;width:8px}
+    .m-chip-sl input[type=range]{flex:1;min-width:0;accent-color:#888}
     /* Restaurar apariencia nativa iOS para que los sliders se puedan arrastrar */
     input[type=range]{-webkit-appearance:auto!important;height:auto!important}
     input[type=range]::-webkit-slider-thumb{-webkit-appearance:auto!important}
-    /* Panel separado ya no se usa */
+    /* Panel separado de área: no se usa */
     #mAreaControls{display:none!important}
     /* Modo presentación */
     body.mob-presenting #mobileWheelRow,
@@ -1305,7 +1312,7 @@ const _isMobile=()=>window.innerWidth<768;
   });
 })();
 
-// — Paleta mobile: todas las áreas siempre visibles —
+// — Paleta mobile: chips horizontales, cada uno con sus controles —
 let _mobSliderBusy=false;
 
 function renderMobilePalette(){
@@ -1319,24 +1326,25 @@ function renderMobilePalette(){
     const sVal=areaSat[i]??saturation;
     const lVal=areaLum[i]??luminosity;
     const cycleOk=canCycle&&!isA;
-    return`<div class="m-area-card${isA?' anch':''}">
-      <div class="m-area-r1">
-        <div class="m-area-sw" style="background:${hslCss(c.h,c.s,c.l)}"></div>
-        <span class="m-area-nm">${currentAreaNames[i]||'Área '+(i+1)}</span>
-        <button class="m-abtn${isA?' anch':''}" onclick="setAnchorMob(${i})">${isA?'◉':'⊙'}</button>
-        <button class="m-abtn"${cycleOk?` onclick="cycleAreaColor(${i},-1)"`:' disabled'}>←</button>
-        <button class="m-abtn"${cycleOk?` onclick="cycleAreaColor(${i},1)"`:' disabled'}>→</button>
-      </div>
-      <div class="m-area-r2">
-        <span class="m-slbl">S</span>
-        <input type="range" id="mSat${i}" min="0" max="100" value="${sVal}"
-          style="accent-color:#888" oninput="_mSetSat(${i},+this.value)" onchange="renderMobilePalette()">
-        <span class="m-sval" id="mSatV${i}">${sVal}%</span>
-        <span class="m-sdiv"></span>
-        <span class="m-slbl">L</span>
-        <input type="range" id="mLum${i}" min="5" max="95" value="${lVal}"
-          style="accent-color:#888" oninput="_mSetLum(${i},+this.value)" onchange="renderMobilePalette()">
-        <span class="m-sval" id="mLumV${i}">${lVal}%</span>
+    return`<div class="m-chip${isA?' anchor':''}">
+      <div class="m-chip-swatch" style="background:${hslCss(c.h,c.s,c.l)}"></div>
+      <div class="m-chip-body">
+        <div class="m-chip-r1">
+          <span class="m-chip-nm">${currentAreaNames[i]||'Área '+(i+1)}</span>
+          <button class="m-cabtn${isA?' anch':''}" onclick="setAnchorMob(${i})">${isA?'◉':'⊙'}</button>
+          <button class="m-cabtn"${cycleOk?` onclick="cycleAreaColor(${i},-1)"`:' disabled'}>←</button>
+          <button class="m-cabtn"${cycleOk?` onclick="cycleAreaColor(${i},1)"`:' disabled'}>→</button>
+        </div>
+        <div class="m-chip-sl">
+          <span class="m-clbl">S</span>
+          <input type="range" id="mSat${i}" min="0" max="100" value="${sVal}"
+            style="accent-color:#888" oninput="_mSetSat(${i},+this.value)" onchange="renderMobilePalette()">
+        </div>
+        <div class="m-chip-sl">
+          <span class="m-clbl">L</span>
+          <input type="range" id="mLum${i}" min="5" max="95" value="${lVal}"
+            style="accent-color:#888" oninput="_mSetLum(${i},+this.value)" onchange="renderMobilePalette()">
+        </div>
       </div>
     </div>`;
   }).join('');

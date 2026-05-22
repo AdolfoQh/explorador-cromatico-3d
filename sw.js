@@ -1,4 +1,4 @@
-const CACHE = 'cromatico-v6';
+const CACHE = 'cromatico-v7';
 
 // Recursos locales: críticos, deben cachearse sí o sí
 const LOCAL_ASSETS = [

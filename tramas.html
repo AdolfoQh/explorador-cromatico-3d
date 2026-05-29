@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explorador Cromático · Tramas — FAD UNCUYO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0f11;--surface:#1a1a1f;--surface2:#22222a;--border:#2e2e3a;--text:#e8e8f0;--text-dim:#7a7a90;--radius:12px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+.header{padding:12px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0}
+.header-title{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim)}
+.header-title span{color:var(--text)}
+.header-link{font-size:11px;color:var(--text-dim);text-decoration:none;font-family:'DM Mono',monospace;opacity:.55;transition:opacity .2s}
+.header-link:hover{opacity:1}
+
+.main{display:grid;grid-template-columns:272px 1fr 252px;flex:1;min-height:0}
+.left-panel{padding:14px;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.right-panel{padding:14px;border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.center-panel{display:flex;flex-direction:column;overflow:hidden;background:#141416}
+
+.section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+
+/* WHEEL */
+.wheel-wrap{display:flex;justify-content:center}
+#colorWheel{cursor:crosshair;border-radius:50%;display:block}
+
+/* SCHEMES */
+.scheme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.scheme-btn{padding:7px 3px;border-radius:7px;border:1px solid var(--border);background:var(--surface);color:var(--text-dim);font-family:'DM Sans',sans-serif;font-size:10px;text-align:center;cursor:pointer;transition:all .2s;line-height:1.3;white-space:pre-line}
+.scheme-btn:hover{border-color:#555;color:var(--text)}
+.scheme-btn.active{border-color:#fff;background:var(--surface2);color:var(--text)}
+.scheme-icon{display:block;margin:0 auto 3px;font-size:14px}
+.scheme-info{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px}
+.scheme-info-name{font-size:12px;font-weight:600;margin-bottom:3px}
+.scheme-info-desc{font-size:11px;color:var(--text-dim);line-height:1.6}
+
+/* SLIDERS */
+.slider-item{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.slider-header{display:flex;justify-content:space-between}
+.slider-name{font-size:11px;color:var(--text-dim);font-family:'DM Mono',monospace}
+.slider-val{font-size:11px;color:var(--text);font-family:'DM Mono',monospace}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:white;cursor:pointer}
+
+/* TRAMA */
+.trama-wrap{flex:1;min-height:0;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:#141416}
+.trama-wrap.drag-over{outline:2px dashed #555;outline-offset:-4px}
+#tramaSVG{width:100%;height:100%;display:block}
+#tramaSVG .coloreable{cursor:pointer;transition:filter .08s}
+#tramaSVG .coloreable:hover{filter:brightness(1.35)}
+.trama-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:.35;pointer-events:none;text-align:center;padding:40px}
+.trama-empty-icon{font-size:52px}
+.trama-empty-txt{font-size:13px;color:var(--text-dim);line-height:1.6}
+
+/* UPLOAD BAR */
+.upload-bar{padding:9px 14px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.up-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:border-color .2s;white-space:nowrap}
+.up-btn:hover{border-color:#aaa}
+.up-hint{font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* GROUPS */
+.group-slot{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:2px solid var(--border);background:var(--surface);cursor:pointer;transition:all .18s;margin-bottom:5px}
+.group-slot:hover{border-color:#555}
+.group-slot.active{background:var(--surface2)}
+.group-key{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text-dim);width:16px;text-align:center;flex-shrink:0}
+.group-slot.active .group-key{color:var(--text)}
+.group-swatch{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(255,255,255,.1)}
+.group-info{flex:1;min-width:0}
+.group-color-name{font-size:11px;color:var(--text);margin-bottom:1px;font-family:'DM Mono',monospace}
+.group-count{font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace}
+.group-clear{background:none;border:none;color:var(--text-dim);font-size:13px;cursor:pointer;padding:2px 4px;opacity:0;transition:opacity .15s;flex-shrink:0}
+.group-slot:hover .group-clear{opacity:.5}
+.group-clear:hover{color:var(--text);opacity:1!important}
+
+.palette-preview{display:flex;gap:4px;height:20px;margin-top:2px}
+.pal-swatch{flex:1;border-radius:4px;border:1px solid rgba(255,255,255,.07)}
+
+.active-bar{padding:9px 11px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.5}
+.active-bar strong{color:var(--text)}
+
+.instr{font-size:11px;color:var(--text-dim);line-height:1.75;padding:10px 11px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.instr b{color:var(--text)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Explorador <span>Cromático · Tramas</span> — FAD UNCUYO</div>
+  <a class="header-link" href="explorador-cromatico-3d-v22.html">← Explorador 3D (IDI)</a>
+</div>
+
+<div class="main">
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div>
+      <div class="section-label">Círculo cromático</div>
+      <div class="wheel-wrap"><canvas id="colorWheel" width="210" height="210"></canvas></div>
+    </div>
+    <div>
+      <div class="section-label">Esquema</div>
+      <div class="scheme-grid" id="schemeGrid"></div>
+    </div>
+    <div class="scheme-info">
+      <div class="scheme-info-name" id="schemeInfoName"></div>
+      <div class="scheme-info-desc" id="schemeInfoDesc"></div>
+    </div>
+    <div>
+      <div class="section-label">Variables</div>
+      <div class="slider-item">
+        <div class="slider-header"><span class="slider-name">Saturación</span><span class="slider-val" id="satVal">70%</span></div>
+        <input type="range" id="satSlider" min="10" max="100" value="70" oninput="onSlider()">
+      </div>
+      <div class="slider-item">
+        <div class="slider-header"><span class="slider-name">Luminosidad</span><span class="slider-val" id="lumVal">50%</span></div>
+        <input type="range" id="lumSlider" min="15" max="85" value="50" oninput="onSlider()">
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center-panel">
+    <div class="trama-wrap" id="tramaWrap">
+      <div class="trama-empty" id="tramaEmpty">
+        <div class="trama-empty-icon">⬡</div>
+        <div class="trama-empty-txt">Cargá tu SVG o usá la trama de ejemplo<br>para explorar esquemas cromáticos</div>
+      </div>
+      <svg id="tramaSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 460" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
+    <div class="upload-bar">
+      <button class="up-btn" onclick="loadSample()">⬡ Trama ejemplo</button>
+      <button class="up-btn" onclick="document.getElementById('svgFile').click()">↑ Subir SVG</button>
+      <input type="file" id="svgFile" accept=".svg,image/svg+xml" style="display:none" onchange="loadFile(event)">
+      <span class="up-hint" id="upHint">SVG con paths cerrados · podés arrastrar el archivo acá</span>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div>
+      <div class="section-label">Paleta del esquema</div>
+      <div class="palette-preview" id="palettePreview"></div>
+    </div>
+    <div>
+      <div class="section-label">Grupos de color</div>
+      <div id="groupsSection"></div>
+    </div>
+    <div class="active-bar" id="activeBar">
+      Elegí un grupo y hacé clic en los shapes de la trama para asignarlos.
+    </div>
+    <div>
+      <div class="section-label">Cómo usar</div>
+      <div class="instr">
+        <b>1.</b> Cargá tu trama (SVG con paths cerrados)<br>
+        <b>2.</b> Elegí un grupo A / B / C / D<br>
+        <b>3.</b> Hacé clic en los shapes para asignarlos<br>
+        <b>4.</b> Cambiá el esquema y mové la rueda<br>
+        <b>5.</b> Explorá cómo el color transforma tu composición
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let baseHue=200, saturation=70, luminosity=50;
+let currentScheme='complementario';
+let activeGroup='A';
+let tramaLoaded=false;
+
+const GRP=['A','B','C','D'];
+const grp={A:new Set(),B:new Set(),C:new Set(),D:new Set()};
+const elmGrp=new Map(); // element → group key
+
+// ── SCHEMES ────────────────────────────────────────────────────────────────
+const schemes={
+  monocromatico:{
+    label:'Mono-\ncromático',icon:'◎',n:3,
+    desc:'Un solo matiz con variaciones de luminosidad. Máxima armonía.',
+    hues:h=>[h,h,h,h], lums:[78,60,42,26]},
+  analogos:{
+    label:'Análogos',icon:'◑',n:3,
+    desc:'Colores vecinos (30°–60°). Armonía suave y natural.',
+    hues:h=>[h,(h+30)%360,(h+60)%360,(h+90)%360]},
+  complementario:{
+    label:'Comple-\nmentario',icon:'◐',n:2,
+    desc:'Dos colores opuestos. Máximo contraste cromático.',
+    hues:h=>[h,(h+180)%360,(h+90)%360,(h+270)%360]},
+  comp_dividido:{
+    label:'Comp.\nDividido',icon:'⊙',n:3,
+    desc:'El complementario dividido en dos adyacentes. Contraste más suave.',
+    hues:h=>[h,(h+150)%360,(h+210)%360,(h+150)%360]},
+  triadico:{
+    label:'Triádico',icon:'△',n:3,
+    desc:'Tres colores equidistantes (120°). Equilibrio y dinamismo.',
+    hues:h=>[h,(h+120)%360,(h+240)%360,(h+60)%360]},
+  cuadrado:{
+    label:'Cuadrado',icon:'□',n:4,
+    desc:'Cuatro colores a 90°. Rica variedad tonal, requiere jerarquía.',
+    hues:h=>[h,(h+90)%360,(h+180)%360,(h+270)%360]},
+  rectangulo:{
+    label:'Rectángulo',icon:'▭',n:4,
+    desc:'Dos pares de complementarios. Paleta compleja y dinámica.',
+    hues:h=>[h,(h+60)%360,(h+180)%360,(h+240)%360]},
+  tinte_sombra:{
+    label:'Tinte &\nSombra',icon:'▓',n:4,
+    desc:'Variaciones claras y oscuras de un mismo matiz. Profundidad sin cambiar color.',
+    hues:h=>[h,h,h,h], lums:[80,64,46,28]}
+};
+
+// ── COLOR UTILS ────────────────────────────────────────────────────────────
+function hslToHex(h,s,l){
+  s/=100;l/=100;
+  const a=s*Math.min(l,1-l);
+  const f=n=>{const k=(n+h/30)%12;const c=l-a*Math.max(Math.min(k-3,9-k,1),-1);return Math.round(255*c).toString(16).padStart(2,'0')};
+  return`#${f(0)}${f(8)}${f(4)}`;
+}
+function hslCss(h,s,l){return`hsl(${Math.round(h)},${Math.round(s)}%,${Math.round(l)}%)`}
+
+// Devuelve 4 objetos {h,s,l,active} para los 4 grupos según el esquema
+function schemeColors(){
+  const sc=schemes[currentScheme];
+  const hues=sc.hues(baseHue);
+  return GRP.map((_,i)=>{
+    const h=hues[i];
+    let s=saturation;
+    let l=sc.lums?sc.lums[i]:luminosity;
+    return{h,s,l,active:i<sc.n};
+  });
+}
+
+// ── WHEEL ──────────────────────────────────────────────────────────────────
+const RINGS=[
+  {s:100,l:43},{s:88,l:50},{s:74,l:57},{s:60,l:63},
+  {s:46,l:70},{s:32,l:76},{s:20,l:83},{s:10,l:89}
+];
+
+function drawWheel(){
+  const cv=document.getElementById('colorWheel');
+  const ctx=cv.getContext('2d');
+  const cx=cv.width/2,cy=cv.height/2;
+  const maxR=cx-3,minR=maxR*.13;
+  const n=RINGS.length,rw=(maxR-minR)/n;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  for(let ri=0;ri<n;ri++){
+    const r=RINGS[ri];
+    const oR=maxR-ri*rw,iR=maxR-(ri+1)*rw;
+    for(let d=0;d<360;d++){
+      const a1=(d-90)*Math.PI/180,a2=(d+1-90)*Math.PI/180;
+      ctx.beginPath();ctx.arc(cx,cy,oR,a1,a2);ctx.arc(cx,cy,Math.max(iR,1),a2,a1,true);
+      ctx.closePath();ctx.fillStyle=`hsl(${d},${r.s}%,${r.l}%)`;ctx.fill();
+    }
+    ctx.beginPath();ctx.arc(cx,cy,iR,0,Math.PI*2);
+    ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=.8;ctx.stroke();
+  }
+  ctx.beginPath();ctx.arc(cx,cy,minR,0,Math.PI*2);
+  ctx.fillStyle='#f0f0f0';ctx.fill();
+
+  // Marcadores de grupos en la rueda
+  const colors=schemeColors();
+  const ringOf=(s,l)=>{let b=0,bd=Infinity;RINGS.forEach((r,i)=>{const d=Math.abs(r.s-s)+Math.abs(r.l-l);if(d<bd){bd=d;b=i;}});return b;};
+  colors.forEach((c,i)=>{
+    if(!c.active) return;
+    const ri=ringOf(c.s,c.l);
+    const oR=maxR-ri*rw,iR=maxR-(ri+1)*rw;
+    const dist=(oR+iR)/2;
+    const ang=(c.h-90)*Math.PI/180;
+    const px=cx+Math.cos(ang)*dist,py=cy+Math.sin(ang)*dist;
+    ctx.beginPath();ctx.arc(px,py,7,0,Math.PI*2);
+    ctx.fillStyle=hslCss(c.h,c.s,c.l);ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 7px DM Mono,monospace';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(GRP[i],px,py);
+  });
+}
+
+let _wDrag=false;
+function wheelAt(e){
+  const cv=document.getElementById('colorWheel');
+  const rect=cv.getBoundingClientRect();
+  const sx=cv.width/rect.width,sy=cv.height/rect.height;
+  const x=(e.clientX-rect.left)*sx-cv.width/2;
+  const y=(e.clientY-rect.top)*sy-cv.height/2;
+  const r=Math.sqrt(x*x+y*y);
+  if(r<cv.width/2*.13) return;
+  let ang=Math.atan2(y,x)*180/Math.PI+90;
+  if(ang<0) ang+=360;
+  baseHue=ang%360;
+  drawWheel();applyColors();
+}
+document.getElementById('colorWheel').addEventListener('mousedown',e=>{_wDrag=true;wheelAt(e)});
+document.addEventListener('mousemove',e=>{if(_wDrag)wheelAt(e)});
+document.addEventListener('mouseup',()=>_wDrag=false);
+document.getElementById('colorWheel').addEventListener('touchstart',e=>{e.preventDefault();_wDrag=true;wheelAt(e.touches[0])},{passive:false});
+document.addEventListener('touchmove',e=>{if(_wDrag)wheelAt(e.touches[0])});
+document.addEventListener('touchend',()=>_wDrag=false);
+
+// ── SCHEMES GRID ──────────────────────────────────────────────────────────
+function buildSchemeGrid(){
+  const grid=document.getElementById('schemeGrid');
+  grid.innerHTML=Object.entries(schemes).map(([key,s])=>`
+    <button class="scheme-btn${key===currentScheme?' active':''}" onclick="setScheme('${key}')">
+      <span class="scheme-icon">${s.icon}</span>${s.label}
+    </button>`).join('');
+}
+
+function setScheme(key){
+  currentScheme=key;
+  buildSchemeGrid();
+  const s=schemes[key];
+  document.getElementById('schemeInfoName').textContent=s.label.replace(/\n/g,'');
+  document.getElementById('schemeInfoDesc').textContent=s.desc;
+  drawWheel();applyColors();renderGroups();
+}
+
+// ── SLIDERS ────────────────────────────────────────────────────────────────
+function onSlider(){
+  saturation=+document.getElementById('satSlider').value;
+  luminosity=+document.getElementById('lumSlider').value;
+  document.getElementById('satVal').textContent=saturation+'%';
+  document.getElementById('lumVal').textContent=luminosity+'%';
+  drawWheel();applyColors();
+}
+
+// ── GROUPS RENDER ─────────────────────────────────────────────────────────
+function renderGroups(){
+  const colors=schemeColors();
+  const sec=document.getElementById('groupsSection');
+  sec.innerHTML=GRP.map((k,i)=>{
+    const c=colors[i];
+    const bg=c.active?hslCss(c.h,c.s,c.l):'var(--surface2)';
+    const hex=c.active?hslToHex(c.h,c.s,c.l):'sin color';
+    const count=grp[k].size;
+    const isAct=k===activeGroup;
+    return`<div class="group-slot${isAct?' active':''}" onclick="setActiveGroup('${k}')"
+      style="${isAct&&c.active?`border-color:${bg}`:''}">
+      <div class="group-key">${k}</div>
+      <div class="group-swatch" style="background:${bg}"></div>
+      <div class="group-info">
+        <div class="group-color-name">${hex}</div>
+        <div class="group-count">${count?count+' shape'+(count>1?'s':''):'vacío'}</div>
+      </div>
+      ${count?`<button class="group-clear" title="Vaciar grupo" onclick="clearGrp(event,'${k}')">✕</button>`:''}
+    </div>`;
+  }).join('');
+
+  // Palette preview
+  const prev=document.getElementById('palettePreview');
+  prev.innerHTML=colors.filter(c=>c.active).map(c=>
+    `<div class="pal-swatch" style="background:${hslCss(c.h,c.s,c.l)}" title="${hslToHex(c.h,c.s,c.l)}"></div>`
+  ).join('');
+
+  // Active bar
+  if(tramaLoaded){
+    const c=colors[GRP.indexOf(activeGroup)];
+    document.getElementById('activeBar').innerHTML=
+      `Grupo activo: <strong>${activeGroup}</strong>${c.active?' · '+hslToHex(c.h,c.s,c.l):' · sin color en este esquema'}<br>
+      <span style="opacity:.7">Hacé clic en los shapes para asignarlos</span>`;
+  }
+}
+
+function setActiveGroup(k){activeGroup=k;renderGroups();}
+
+function clearGrp(e,k){
+  e.stopPropagation();
+  grp[k].forEach(el=>{
+    el.style.fill=el._origFill||'';
+    elmGrp.delete(el);
+  });
+  grp[k].clear();
+  renderGroups();
+}
+
+// ── APPLY COLORS ──────────────────────────────────────────────────────────
+function applyColors(){
+  const colors=schemeColors();
+  GRP.forEach((k,i)=>{
+    const c=colors[i];
+    grp[k].forEach(el=>{
+      el.style.fill=c.active?hslCss(c.h,c.s,c.l):'#444';
+      el.style.fillOpacity=c.active?'1':'.3';
+    });
+  });
+  renderGroups();
+}
+
+// ── SVG INTERACTION ───────────────────────────────────────────────────────
+function assignShape(el){
+  const prev=elmGrp.get(el);
+  if(prev) grp[prev].delete(el);
+  grp[activeGroup].add(el);
+  elmGrp.set(el,activeGroup);
+  applyColors();
+  // Flash
+  el.style.filter='brightness(1.8)';
+  setTimeout(()=>{el.style.filter='';},200);
+}
+
+function wireupSVG(){
+  const svg=document.getElementById('tramaSVG');
+  const shapes=svg.querySelectorAll('path,polygon,rect,circle,ellipse');
+  let count=0;
+  shapes.forEach(el=>{
+    const fill=el.getAttribute('fill')||'';
+    const stroke=el.getAttribute('stroke')||'';
+    // Ignorar elementos que son solo stroke (líneas de contorno)
+    if(fill==='none'&&stroke) return;
+    el._origFill=el.style.fill||el.getAttribute('fill')||'';
+    el.classList.add('coloreable');
+    el.addEventListener('click',()=>assignShape(el));
+    el.addEventListener('touchend',e=>{e.preventDefault();assignShape(el);},{passive:false});
+    count++;
+  });
+  document.getElementById('tramaEmpty').style.display='none';
+  document.getElementById('upHint').textContent=count+' shapes interactivos';
+  tramaLoaded=true;
+  renderGroups();
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────────────────────────
+function loadFile(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(e.target.result,'image/svg+xml');
+    const srcSVG=doc.querySelector('svg');
+    if(!srcSVG){alert('Archivo no válido — asegurate de exportar como SVG');return;}
+    resetGroups();
+    const tramaSVG=document.getElementById('tramaSVG');
+    const vb=srcSVG.getAttribute('viewBox');
+    if(vb) tramaSVG.setAttribute('viewBox',vb);
+    else{
+      const w=srcSVG.getAttribute('width')||'600';
+      const h=srcSVG.getAttribute('height')||'460';
+      tramaSVG.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    }
+    tramaSVG.innerHTML=srcSVG.innerHTML;
+    // Dar fill por defecto a shapes sin fill
+    tramaSVG.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
+      if(!el.getAttribute('fill')&&!el.style.fill) el.setAttribute('fill','#888');
+    });
+    wireupSVG();
+    document.getElementById('upHint').textContent=file.name;
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function resetGroups(){
+  GRP.forEach(k=>grp[k].clear());
+  elmGrp.clear();
+  tramaLoaded=false;
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────────
+const wrap=document.getElementById('tramaWrap');
+wrap.addEventListener('dragover',e=>{e.preventDefault();wrap.classList.add('drag-over')});
+wrap.addEventListener('dragleave',()=>wrap.classList.remove('drag-over'));
+wrap.addEventListener('drop',e=>{
+  e.preventDefault();wrap.classList.remove('drag-over');
+  const file=[...e.dataTransfer.files].find(f=>f.name.endsWith('.svg'));
+  if(file) loadFile({target:{files:[file],value:''}});
+});
+
+// ── SAMPLE TRAMA ─────────────────────────────────────────────────────────
+// Genera una trama de cuadrados divididos en 4 triángulos (pinwheel)
+// 4 familias naturales: arriba (A), derecha (B), abajo (C), izquierda (D)
+function loadSample(){
+  resetGroups();
+  const svg=document.getElementById('tramaSVG');
+  svg.setAttribute('viewBox','0 0 600 460');
+
+  const cell=46;
+  const cols=13,rows=10;
+  const ox=(600-cols*cell)/2;
+  const oy=(460-rows*cell)/2;
+
+  // Tonos base para que la trama se vea sin color asignado
+  const fills=['#c4c4c8','#b0b0b4','#9c9ca0','#888890'];
+
+  let html='';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const x=ox+c*cell, y=oy+r*cell;
+      const cx=x+cell/2, cy=y+cell/2;
+      html+=`<path d="M${x},${y} L${x+cell},${y} L${cx},${cy} Z" fill="${fills[0]}" stroke="#141416" stroke-width="0.7"/>`;
+      html+=`<path d="M${x+cell},${y} L${x+cell},${y+cell} L${cx},${cy} Z" fill="${fills[1]}" stroke="#141416" stroke-width="0.7"/>`;
+      html+=`<path d="M${x+cell},${y+cell} L${x},${y+cell} L${cx},${cy} Z" fill="${fills[2]}" stroke="#141416" stroke-width="0.7"/>`;
+      html+=`<path d="M${x},${y+cell} L${x},${y} L${cx},${cy} Z" fill="${fills[3]}" stroke="#141416" stroke-width="0.7"/>`;
+    }
+  }
+  svg.innerHTML=html;
+  wireupSVG();
+  document.getElementById('upHint').textContent='Trama pinwheel · 4 familias naturales: superior (A) · derecha (B) · inferior (C) · izquierda (D)';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+buildSchemeGrid();
+setScheme('complementario');
+onSlider();
+drawWheel();
+renderGroups();
+</script>
+</body>
+</html>

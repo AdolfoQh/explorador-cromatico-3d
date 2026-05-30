@@ -461,8 +461,8 @@ function setGrpLum(k,v,valEl){
 function clearGrp(e,k){
   e.stopPropagation();
   grp[k].forEach(el=>{
-    el.style.fill='#888888'; // vuelve al neutro, no al color original de Illustrator
-    el.style.fillOpacity='1';
+    el.style.fill='';       // quitar inline style → CSS del SVG toma el control de nuevo
+    el.style.fillOpacity='';
     elmGrp.delete(el);
   });
   grp[k].clear();
@@ -519,16 +519,13 @@ function clearPending(){
 function wireupSVG(){
   const svg=document.getElementById('tramaSVG');
   let count=0;
-  svg.querySelectorAll('path,polygon,rect,circle,ellipse,line,polyline').forEach(el=>{
-    // Ignorar elementos que son solo stroke (fill explícitamente none)
+  svg.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
     const fillAttr=el.getAttribute('fill')||'';
-    const strokeAttr=el.getAttribute('stroke')||el.style.stroke||'';
+    const strokeAttr=el.getAttribute('stroke')||'';
+    // Ignorar trazos puros (fill=none + tiene stroke)
     if(fillAttr==='none'&&strokeAttr&&strokeAttr!=='none') return;
     el._origStroke=strokeAttr;
-    // Forzar fill neutro visible — sin CSS del SVG, el inline style siempre gana
-    el.style.fill='#888888';
-    el.style.fillOpacity='1';
-    el.style.stroke=strokeAttr||'none';
+    // No tocar el fill — el CSS del SVG define la apariencia original
     el.classList.add('coloreable');
     el.addEventListener('click',e=>{
       if(e.shiftKey||shiftHeld){togglePending(el);}
@@ -593,14 +590,10 @@ function loadFile(event){
       tramaSVG.setAttribute('viewBox',`0 0 ${w} ${h}`);
     }
     tramaSVG.innerHTML=srcSVG.innerHTML;
-    // Eliminar el bloque <style> de Illustrator (puede tener !important que vence al inline style)
-    tramaSVG.querySelectorAll('style').forEach(s=>s.remove());
-    // Eliminar atributos fill/stroke en <g> que se heredan a los hijos
-    tramaSVG.querySelectorAll('[fill],[stroke]').forEach(el=>{
-      if(el.tagName.toLowerCase()==='g'||el.tagName.toLowerCase()==='svg'){
-        el.removeAttribute('fill');
-        el.removeAttribute('stroke');
-      }
+    // Solo dar fill a shapes que genuinamente no tienen ninguno (ni atributo ni clase CSS)
+    tramaSVG.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
+      if(!el.getAttribute('fill')&&!el.getAttribute('class')&&!el.style.fill)
+        el.setAttribute('fill','#888');
     });
     wireupSVG();
     document.getElementById('upHint').textContent=file.name;

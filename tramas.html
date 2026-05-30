@@ -597,8 +597,6 @@ function loadFile(event){
     });
     wireupSVG();
     document.getElementById('upHint').textContent=file.name;
-    // Intentar detección automática de grupos
-    setTimeout(()=>detectAndAutoAssign(tramaSVG),100);
   };
   reader.readAsText(file);
   event.target.value='';

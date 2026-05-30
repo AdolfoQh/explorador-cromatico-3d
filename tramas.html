@@ -10,15 +10,15 @@
 :root{--bg:#0f0f11;--surface:#1a1a1f;--surface2:#22222a;--border:#2e2e3a;--text:#e8e8f0;--text-dim:#7a7a90;--radius:12px}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
-.header{padding:12px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0}
+.header{padding:12px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);flex-shrink:0;gap:12px}
 .header-title{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim)}
 .header-title span{color:var(--text)}
-.header-link{font-size:11px;color:var(--text-dim);text-decoration:none;font-family:'DM Mono',monospace;opacity:.55;transition:opacity .2s}
+.header-link{font-size:11px;color:var(--text-dim);text-decoration:none;font-family:'DM Mono',monospace;opacity:.5;transition:opacity .2s;white-space:nowrap}
 .header-link:hover{opacity:1}
 
-.main{display:grid;grid-template-columns:272px 1fr 252px;flex:1;min-height:0}
+.main{display:grid;grid-template-columns:272px 1fr 268px;flex:1;min-height:0}
 .left-panel{padding:14px;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:14px}
-.right-panel{padding:14px;border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.right-panel{padding:14px;border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:10px}
 .center-panel{display:flex;flex-direction:column;overflow:hidden;background:#141416}
 
 .section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:8px}
@@ -52,39 +52,58 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 .trama-wrap.drag-over{outline:2px dashed #555;outline-offset:-4px}
 #tramaSVG{width:100%;height:100%;display:block}
 #tramaSVG .coloreable{cursor:pointer;transition:filter .08s}
-#tramaSVG .coloreable:hover{filter:brightness(1.35)}
+#tramaSVG .coloreable:hover{filter:brightness(1.3)}
+#tramaSVG .coloreable.pending{outline:2px solid #facc15;outline-offset:-1px;filter:brightness(1.2)}
 .trama-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:.35;pointer-events:none;text-align:center;padding:40px}
 .trama-empty-icon{font-size:52px}
 .trama-empty-txt{font-size:13px;color:var(--text-dim);line-height:1.6}
 
 /* UPLOAD BAR */
-.upload-bar{padding:9px 14px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:8px;flex-shrink:0}
-.up-btn{padding:6px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:border-color .2s;white-space:nowrap}
+.upload-bar{padding:8px 14px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:7px;flex-shrink:0;flex-wrap:wrap}
+.up-btn{padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:border-color .2s;white-space:nowrap}
 .up-btn:hover{border-color:#aaa}
-.up-hint{font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-btn.active{border-color:#facc15;color:#facc15}
+.up-hint{font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 
 /* GROUPS */
-.group-slot{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;border:2px solid var(--border);background:var(--surface);cursor:pointer;transition:all .18s;margin-bottom:5px}
-.group-slot:hover{border-color:#555}
-.group-slot.active{background:var(--surface2)}
-.group-key{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--text-dim);width:16px;text-align:center;flex-shrink:0}
-.group-slot.active .group-key{color:var(--text)}
-.group-swatch{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(255,255,255,.1)}
-.group-info{flex:1;min-width:0}
-.group-color-name{font-size:11px;color:var(--text);margin-bottom:1px;font-family:'DM Mono',monospace}
-.group-count{font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace}
-.group-clear{background:none;border:none;color:var(--text-dim);font-size:13px;cursor:pointer;padding:2px 4px;opacity:0;transition:opacity .15s;flex-shrink:0}
-.group-slot:hover .group-clear{opacity:.5}
+.group-block{border-radius:9px;border:2px solid var(--border);background:var(--surface);margin-bottom:6px;overflow:hidden;transition:border-color .18s}
+.group-block.active{border-color:var(--gc,#888);background:var(--surface2)}
+.group-header{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer}
+.group-key{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--text-dim);width:14px;text-align:center;flex-shrink:0}
+.group-block.active .group-key{color:var(--text)}
+.group-swatch{width:20px;height:20px;border-radius:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.1)}
+.group-hex{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);flex:1;min-width:0}
+.group-count{font-size:10px;color:var(--text-dim);font-family:'DM Mono',monospace;flex-shrink:0}
+.group-clear{background:none;border:none;color:var(--text-dim);font-size:12px;cursor:pointer;padding:1px 4px;opacity:0;transition:opacity .15s;flex-shrink:0}
+.group-header:hover .group-clear{opacity:.5}
 .group-clear:hover{color:var(--text);opacity:1!important}
+.group-sliders{padding:4px 10px 9px;display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--border)}
+.gs-row{display:flex;align-items:center;gap:6px}
+.gs-lbl{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;width:22px;flex-shrink:0}
+.gs-val{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;width:28px;text-align:right;flex-shrink:0}
+.gs-row input[type=range]{flex:1;height:3px}
 
-.palette-preview{display:flex;gap:4px;height:20px;margin-top:2px}
+/* PALETTE PREVIEW */
+.palette-preview{display:flex;gap:4px;height:18px}
 .pal-swatch{flex:1;border-radius:4px;border:1px solid rgba(255,255,255,.07)}
 
-.active-bar{padding:9px 11px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.5}
+/* ACTIVE BAR */
+.active-bar{padding:8px 10px;border-radius:8px;background:var(--surface);border:1px solid var(--border);font-size:11px;color:var(--text-dim);line-height:1.5}
 .active-bar strong{color:var(--text)}
 
-.instr{font-size:11px;color:var(--text-dim);line-height:1.75;padding:10px 11px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
+/* PENDING BAR */
+.pending-bar{padding:7px 10px;border-radius:7px;background:#2a2510;border:1px solid #facc1555;font-size:11px;color:#facc15;display:none;align-items:center;gap:8px}
+.pending-bar.visible{display:flex}
+.assign-btn{padding:4px 10px;border-radius:5px;border:1px solid #facc1566;background:#3a3010;color:#facc15;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;white-space:nowrap}
+.assign-btn:hover{border-color:#facc15}
+
+/* INSTRUCCIONES */
+.instr{font-size:11px;color:var(--text-dim);line-height:1.75;padding:9px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px}
 .instr b{color:var(--text)}
+
+/* NOTIFY TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:12px;padding:9px 18px;border-radius:8px;font-family:'DM Sans',sans-serif;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -96,7 +115,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
 
 <div class="main">
 
-  <!-- LEFT -->
+  <!-- LEFT: rueda + esquemas + sliders globales -->
   <div class="left-panel">
     <div>
       <div class="section-label">Círculo cromático</div>
@@ -111,19 +130,19 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
       <div class="scheme-info-desc" id="schemeInfoDesc"></div>
     </div>
     <div>
-      <div class="section-label">Variables</div>
+      <div class="section-label">Variables globales</div>
       <div class="slider-item">
         <div class="slider-header"><span class="slider-name">Saturación</span><span class="slider-val" id="satVal">70%</span></div>
-        <input type="range" id="satSlider" min="10" max="100" value="70" oninput="onSlider()">
+        <input type="range" id="satSlider" min="10" max="100" value="70" oninput="onGlobalSlider()">
       </div>
       <div class="slider-item">
         <div class="slider-header"><span class="slider-name">Luminosidad</span><span class="slider-val" id="lumVal">50%</span></div>
-        <input type="range" id="lumSlider" min="15" max="85" value="50" oninput="onSlider()">
+        <input type="range" id="lumSlider" min="15" max="85" value="50" oninput="onGlobalSlider()">
       </div>
     </div>
   </div>
 
-  <!-- CENTER -->
+  <!-- CENTER: trama SVG -->
   <div class="center-panel">
     <div class="trama-wrap" id="tramaWrap">
       <div class="trama-empty" id="tramaEmpty">
@@ -133,39 +152,46 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:13px;heigh
       <svg id="tramaSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 460" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
     <div class="upload-bar">
-      <button class="up-btn" onclick="loadSample()">⬡ Trama ejemplo</button>
+      <button class="up-btn" onclick="loadSample()">⬡ Ejemplo</button>
       <button class="up-btn" onclick="document.getElementById('svgFile').click()">↑ Subir SVG</button>
       <input type="file" id="svgFile" accept=".svg,image/svg+xml" style="display:none" onchange="loadFile(event)">
-      <span class="up-hint" id="upHint">SVG con paths cerrados · podés arrastrar el archivo acá</span>
+      <button class="up-btn" id="strokeBtn" onclick="toggleStrokes()" title="Mostrar/ocultar contornos">⊡ Contornos</button>
+      <button class="up-btn" onclick="exportPNG()">↓ PNG</button>
+      <button class="up-btn" onclick="exportSVG()">↓ SVG</button>
+      <span class="up-hint" id="upHint">Subí tu SVG · también podés arrastrarlo acá</span>
     </div>
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT: grupos -->
   <div class="right-panel">
     <div>
-      <div class="section-label">Paleta del esquema</div>
+      <div class="section-label">Paleta</div>
       <div class="palette-preview" id="palettePreview"></div>
     </div>
     <div>
       <div class="section-label">Grupos de color</div>
       <div id="groupsSection"></div>
     </div>
-    <div class="active-bar" id="activeBar">
-      Elegí un grupo y hacé clic en los shapes de la trama para asignarlos.
+    <div class="pending-bar" id="pendingBar">
+      <span id="pendingTxt">0 shapes seleccionados</span>
+      <button class="assign-btn" onclick="assignPending()">Asignar a <span id="pendingGrpLabel">A</span></button>
+      <button class="assign-btn" onclick="clearPending()" style="border-color:#666;color:var(--text-dim)">✕</button>
     </div>
+    <div class="active-bar" id="activeBar">Elegí un grupo y hacé clic en los shapes de la trama para asignarlos.</div>
     <div>
       <div class="section-label">Cómo usar</div>
       <div class="instr">
-        <b>1.</b> Cargá tu trama (SVG con paths cerrados)<br>
-        <b>2.</b> Elegí un grupo A / B / C / D<br>
-        <b>3.</b> Hacé clic en los shapes para asignarlos<br>
-        <b>4.</b> Cambiá el esquema y mové la rueda<br>
-        <b>5.</b> Explorá cómo el color transforma tu composición
+        <b>Clic</b> en un shape → lo asigna al grupo activo<br>
+        <b>Shift+clic</b> → selección múltiple (amarillo)<br>
+        Luego "Asignar" para aplicar al grupo activo<br>
+        <b>Rueda</b> → ángulo = matiz · radio = sat/lum<br>
+        <b>⊡ Contornos</b> → muestra/oculta los bordes
       </div>
     </div>
   </div>
-
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 // ── STATE ──────────────────────────────────────────────────────────────────
@@ -173,45 +199,48 @@ let baseHue=200, saturation=70, luminosity=50;
 let currentScheme='complementario';
 let activeGroup='A';
 let tramaLoaded=false;
+let showStrokes=true;
 
 const GRP=['A','B','C','D'];
 const grp={A:new Set(),B:new Set(),C:new Set(),D:new Set()};
-const elmGrp=new Map(); // element → group key
+const elmGrp=new Map();
+
+// Sat/Lum independiente por grupo (null = usa global)
+const grpSat={A:null,B:null,C:null,D:null};
+const grpLum={A:null,B:null,C:null,D:null};
+
+// Selección múltiple
+const pending=new Set();
+let shiftHeld=false;
+document.addEventListener('keydown',e=>{if(e.key==='Shift')shiftHeld=true});
+document.addEventListener('keyup',e=>{if(e.key==='Shift'){shiftHeld=false;}});
 
 // ── SCHEMES ────────────────────────────────────────────────────────────────
 const schemes={
-  monocromatico:{
-    label:'Mono-\ncromático',icon:'◎',n:3,
+  monocromatico:{label:'Mono-\ncromático',icon:'◎',n:3,
     desc:'Un solo matiz con variaciones de luminosidad. Máxima armonía.',
-    hues:h=>[h,h,h,h], lums:[78,60,42,26]},
-  analogos:{
-    label:'Análogos',icon:'◑',n:3,
+    hues:h=>[h,h,h,h],baseLums:[78,60,42,26]},
+  analogos:{label:'Análogos',icon:'◑',n:3,
     desc:'Colores vecinos (30°–60°). Armonía suave y natural.',
     hues:h=>[h,(h+30)%360,(h+60)%360,(h+90)%360]},
-  complementario:{
-    label:'Comple-\nmentario',icon:'◐',n:2,
+  complementario:{label:'Comple-\nmentario',icon:'◐',n:2,
     desc:'Dos colores opuestos. Máximo contraste cromático.',
     hues:h=>[h,(h+180)%360,(h+90)%360,(h+270)%360]},
-  comp_dividido:{
-    label:'Comp.\nDividido',icon:'⊙',n:3,
-    desc:'El complementario dividido en dos adyacentes. Contraste más suave.',
+  comp_dividido:{label:'Comp.\nDividido',icon:'⊙',n:3,
+    desc:'El complementario dividido en dos adyacentes.',
     hues:h=>[h,(h+150)%360,(h+210)%360,(h+150)%360]},
-  triadico:{
-    label:'Triádico',icon:'△',n:3,
+  triadico:{label:'Triádico',icon:'△',n:3,
     desc:'Tres colores equidistantes (120°). Equilibrio y dinamismo.',
     hues:h=>[h,(h+120)%360,(h+240)%360,(h+60)%360]},
-  cuadrado:{
-    label:'Cuadrado',icon:'□',n:4,
-    desc:'Cuatro colores a 90°. Rica variedad tonal, requiere jerarquía.',
+  cuadrado:{label:'Cuadrado',icon:'□',n:4,
+    desc:'Cuatro colores a 90°. Rica variedad, requiere jerarquía.',
     hues:h=>[h,(h+90)%360,(h+180)%360,(h+270)%360]},
-  rectangulo:{
-    label:'Rectángulo',icon:'▭',n:4,
+  rectangulo:{label:'Rectángulo',icon:'▭',n:4,
     desc:'Dos pares de complementarios. Paleta compleja y dinámica.',
     hues:h=>[h,(h+60)%360,(h+180)%360,(h+240)%360]},
-  tinte_sombra:{
-    label:'Tinte &\nSombra',icon:'▓',n:4,
-    desc:'Variaciones claras y oscuras de un mismo matiz. Profundidad sin cambiar color.',
-    hues:h=>[h,h,h,h], lums:[80,64,46,28]}
+  tinte_sombra:{label:'Tinte &\nSombra',icon:'▓',n:4,
+    desc:'Variaciones claras y oscuras de un mismo matiz.',
+    hues:h=>[h,h,h,h],baseLums:[80,64,46,28]}
 };
 
 // ── COLOR UTILS ────────────────────────────────────────────────────────────
@@ -223,14 +252,16 @@ function hslToHex(h,s,l){
 }
 function hslCss(h,s,l){return`hsl(${Math.round(h)},${Math.round(s)}%,${Math.round(l)}%)`}
 
-// Devuelve 4 objetos {h,s,l,active} para los 4 grupos según el esquema
+// Devuelve colores {h,s,l,active} para los 4 grupos
 function schemeColors(){
   const sc=schemes[currentScheme];
   const hues=sc.hues(baseHue);
-  return GRP.map((_,i)=>{
+  return GRP.map((k,i)=>{
     const h=hues[i];
-    let s=saturation;
-    let l=sc.lums?sc.lums[i]:luminosity;
+    const s=grpSat[k]??saturation;
+    // Para mono/tinte_sombra, lum base viene del esquema si no hay override
+    const baseLum=sc.baseLums?sc.baseLums[i]:luminosity;
+    const l=grpLum[k]??(sc.baseLums?baseLum:luminosity);
     return{h,s,l,active:i<sc.n};
   });
 }
@@ -262,7 +293,7 @@ function drawWheel(){
   ctx.beginPath();ctx.arc(cx,cy,minR,0,Math.PI*2);
   ctx.fillStyle='#f0f0f0';ctx.fill();
 
-  // Marcadores de grupos en la rueda
+  // Marcadores de grupos
   const colors=schemeColors();
   const ringOf=(s,l)=>{let b=0,bd=Infinity;RINGS.forEach((r,i)=>{const d=Math.abs(r.s-s)+Math.abs(r.l-l);if(d<bd){bd=d;b=i;}});return b;};
   colors.forEach((c,i)=>{
@@ -281,6 +312,7 @@ function drawWheel(){
   });
 }
 
+// Wheel drag: ángulo = matiz, radio = sat/lum global
 let _wDrag=false;
 function wheelAt(e){
   const cv=document.getElementById('colorWheel');
@@ -289,10 +321,24 @@ function wheelAt(e){
   const x=(e.clientX-rect.left)*sx-cv.width/2;
   const y=(e.clientY-rect.top)*sy-cv.height/2;
   const r=Math.sqrt(x*x+y*y);
-  if(r<cv.width/2*.13) return;
+  const maxR=cv.width/2-3,minR=maxR*.13;
+  if(r<minR) return;
+
+  // Ángulo → matiz
   let ang=Math.atan2(y,x)*180/Math.PI+90;
   if(ang<0) ang+=360;
   baseHue=ang%360;
+
+  // Radio → anillo → sat/lum global
+  const rw=(maxR-minR)/RINGS.length;
+  const ri=Math.max(0,Math.min(RINGS.length-1,Math.floor((maxR-Math.min(r,maxR))/rw)));
+  saturation=RINGS[ri].s;
+  luminosity=RINGS[ri].l;
+  document.getElementById('satSlider').value=saturation;
+  document.getElementById('lumSlider').value=luminosity;
+  document.getElementById('satVal').textContent=saturation+'%';
+  document.getElementById('lumVal').textContent=luminosity+'%';
+
   drawWheel();applyColors();
 }
 document.getElementById('colorWheel').addEventListener('mousedown',e=>{_wDrag=true;wheelAt(e)});
@@ -302,7 +348,7 @@ document.getElementById('colorWheel').addEventListener('touchstart',e=>{e.preven
 document.addEventListener('touchmove',e=>{if(_wDrag)wheelAt(e.touches[0])});
 document.addEventListener('touchend',()=>_wDrag=false);
 
-// ── SCHEMES GRID ──────────────────────────────────────────────────────────
+// ── SCHEMES ────────────────────────────────────────────────────────────────
 function buildSchemeGrid(){
   const grid=document.getElementById('schemeGrid');
   grid.innerHTML=Object.entries(schemes).map(([key,s])=>`
@@ -317,11 +363,13 @@ function setScheme(key){
   const s=schemes[key];
   document.getElementById('schemeInfoName').textContent=s.label.replace(/\n/g,'');
   document.getElementById('schemeInfoDesc').textContent=s.desc;
+  // Resetear lums de grupo si el esquema tiene baseLums
+  if(s.baseLums) GRP.forEach(k=>grpLum[k]=null);
   drawWheel();applyColors();renderGroups();
 }
 
-// ── SLIDERS ────────────────────────────────────────────────────────────────
-function onSlider(){
+// ── GLOBAL SLIDERS ─────────────────────────────────────────────────────────
+function onGlobalSlider(){
   saturation=+document.getElementById('satSlider').value;
   luminosity=+document.getElementById('lumSlider').value;
   document.getElementById('satVal').textContent=saturation+'%';
@@ -332,22 +380,42 @@ function onSlider(){
 // ── GROUPS RENDER ─────────────────────────────────────────────────────────
 function renderGroups(){
   const colors=schemeColors();
+  const sc=schemes[currentScheme];
   const sec=document.getElementById('groupsSection');
   sec.innerHTML=GRP.map((k,i)=>{
     const c=colors[i];
     const bg=c.active?hslCss(c.h,c.s,c.l):'var(--surface2)';
-    const hex=c.active?hslToHex(c.h,c.s,c.l):'sin color';
+    const hex=c.active?hslToHex(c.h,c.s,c.l):'—';
     const count=grp[k].size;
     const isAct=k===activeGroup;
-    return`<div class="group-slot${isAct?' active':''}" onclick="setActiveGroup('${k}')"
-      style="${isAct&&c.active?`border-color:${bg}`:''}">
-      <div class="group-key">${k}</div>
-      <div class="group-swatch" style="background:${bg}"></div>
-      <div class="group-info">
-        <div class="group-color-name">${hex}</div>
-        <div class="group-count">${count?count+' shape'+(count>1?'s':''):'vacío'}</div>
+    const sVal=grpSat[k]??saturation;
+    const lVal=grpLum[k]??(sc.baseLums?sc.baseLums[i]:luminosity);
+    return`
+    <div class="group-block${isAct?' active':''}" id="gblock-${k}"
+         style="${isAct&&c.active?`--gc:${bg}`:''}">
+      <div class="group-header" onclick="setActiveGroup('${k}')">
+        <div class="group-key">${k}</div>
+        <div class="group-swatch" style="background:${bg}"></div>
+        <div class="group-hex">${hex}</div>
+        <div class="group-count">${count?count+'  ▪':'vacío'}</div>
+        ${count?`<button class="group-clear" title="Vaciar grupo" onclick="clearGrp(event,'${k}')">✕</button>`:''}
       </div>
-      ${count?`<button class="group-clear" title="Vaciar grupo" onclick="clearGrp(event,'${k}')">✕</button>`:''}
+      <div class="group-sliders">
+        <div class="gs-row">
+          <span class="gs-lbl">Sat</span>
+          <input type="range" min="10" max="100" value="${sVal}"
+            style="accent-color:${c.active?bg:'#666'}"
+            oninput="setGrpSat('${k}',+this.value,this.nextElementSibling)">
+          <span class="gs-val">${sVal}%</span>
+        </div>
+        <div class="gs-row">
+          <span class="gs-lbl">Lum</span>
+          <input type="range" min="5" max="95" value="${lVal}"
+            style="accent-color:${c.active?bg:'#666'}"
+            oninput="setGrpLum('${k}',+this.value,this.nextElementSibling)">
+          <span class="gs-val">${lVal}%</span>
+        </div>
+      </div>
     </div>`;
   }).join('');
 
@@ -361,20 +429,44 @@ function renderGroups(){
   if(tramaLoaded){
     const c=colors[GRP.indexOf(activeGroup)];
     document.getElementById('activeBar').innerHTML=
-      `Grupo activo: <strong>${activeGroup}</strong>${c.active?' · '+hslToHex(c.h,c.s,c.l):' · sin color en este esquema'}<br>
-      <span style="opacity:.7">Hacé clic en los shapes para asignarlos</span>`;
+      `Grupo activo: <strong>${activeGroup}</strong>`+
+      (c.active?` · <span style="font-family:'DM Mono',monospace">${hslToHex(c.h,c.s,c.l)}</span>`:'  (sin color en este esquema)')+
+      `<br><span style="opacity:.6">Clic = asignar directo · Shift+clic = selección múltiple</span>`;
+  }
+
+  // Pending bar
+  const pb=document.getElementById('pendingBar');
+  if(pending.size>0){
+    pb.classList.add('visible');
+    document.getElementById('pendingTxt').textContent=pending.size+' shape'+(pending.size>1?'s':'')+' seleccionado'+(pending.size>1?'s':'');
+    document.getElementById('pendingGrpLabel').textContent=activeGroup;
+  } else {
+    pb.classList.remove('visible');
   }
 }
 
 function setActiveGroup(k){activeGroup=k;renderGroups();}
 
+function setGrpSat(k,v,valEl){
+  grpSat[k]=v;
+  if(valEl) valEl.textContent=v+'%';
+  applyColors();drawWheel();
+}
+function setGrpLum(k,v,valEl){
+  grpLum[k]=v;
+  if(valEl) valEl.textContent=v+'%';
+  applyColors();drawWheel();
+}
+
 function clearGrp(e,k){
   e.stopPropagation();
   grp[k].forEach(el=>{
     el.style.fill=el._origFill||'';
+    el.style.fillOpacity='';
     elmGrp.delete(el);
   });
   grp[k].clear();
+  grpSat[k]=null;grpLum[k]=null;
   renderGroups();
 }
 
@@ -384,8 +476,8 @@ function applyColors(){
   GRP.forEach((k,i)=>{
     const c=colors[i];
     grp[k].forEach(el=>{
-      el.style.fill=c.active?hslCss(c.h,c.s,c.l):'#444';
-      el.style.fillOpacity=c.active?'1':'.3';
+      el.style.fill=c.active?hslCss(c.h,c.s,c.l):'#3a3a40';
+      el.style.fillOpacity=c.active?'1':'.4';
     });
   });
   renderGroups();
@@ -398,30 +490,83 @@ function assignShape(el){
   grp[activeGroup].add(el);
   elmGrp.set(el,activeGroup);
   applyColors();
-  // Flash
-  el.style.filter='brightness(1.8)';
-  setTimeout(()=>{el.style.filter='';},200);
+  el.style.filter='brightness(2)';
+  setTimeout(()=>{el.style.filter='';},180);
+}
+
+function togglePending(el){
+  if(pending.has(el)){
+    pending.delete(el);
+    el.classList.remove('pending');
+  } else {
+    pending.add(el);
+    el.classList.add('pending');
+  }
+  renderGroups();
+}
+
+function assignPending(){
+  pending.forEach(el=>assignShape(el));
+  clearPending();
+}
+
+function clearPending(){
+  pending.forEach(el=>el.classList.remove('pending'));
+  pending.clear();
+  renderGroups();
 }
 
 function wireupSVG(){
   const svg=document.getElementById('tramaSVG');
-  const shapes=svg.querySelectorAll('path,polygon,rect,circle,ellipse');
   let count=0;
-  shapes.forEach(el=>{
-    const fill=el.getAttribute('fill')||'';
+  svg.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
+    const fill=el.getAttribute('fill')||el.style.fill||'';
     const stroke=el.getAttribute('stroke')||'';
-    // Ignorar elementos que son solo stroke (líneas de contorno)
-    if(fill==='none'&&stroke) return;
+    if(fill==='none'&&stroke) return; // líneas de contorno puras
     el._origFill=el.style.fill||el.getAttribute('fill')||'';
+    el._origStroke=el.getAttribute('stroke')||el.style.stroke||'';
     el.classList.add('coloreable');
-    el.addEventListener('click',()=>assignShape(el));
-    el.addEventListener('touchend',e=>{e.preventDefault();assignShape(el);},{passive:false});
+    el.addEventListener('click',e=>{
+      if(e.shiftKey||shiftHeld){togglePending(el);}
+      else{clearPending();assignShape(el);}
+    });
     count++;
   });
   document.getElementById('tramaEmpty').style.display='none';
   document.getElementById('upHint').textContent=count+' shapes interactivos';
   tramaLoaded=true;
   renderGroups();
+}
+
+// ── TOGGLE STROKES ────────────────────────────────────────────────────────
+function toggleStrokes(){
+  showStrokes=!showStrokes;
+  document.getElementById('tramaSVG').querySelectorAll('.coloreable').forEach(el=>{
+    el.style.stroke=showStrokes?(el._origStroke||''):'none';
+    el.style.strokeWidth=showStrokes?'':'0';
+  });
+  document.getElementById('strokeBtn').classList.toggle('active',!showStrokes);
+  document.getElementById('strokeBtn').textContent=showStrokes?'⊡ Contornos':'⊞ Contornos';
+}
+
+// ── AUTO-DETECT ILLUSTRATOR GROUPS ───────────────────────────────────────
+function detectAndAutoAssign(svgEl){
+  const gEls=[...svgEl.querySelectorAll('g[id]')].filter(g=>{
+    const id=g.id.toLowerCase();
+    return !/^\d+$/.test(id)&&g.querySelectorAll('path,polygon,rect,circle,ellipse').length>0;
+  });
+  if(!gEls.length) return false;
+  // Asignar los primeros 4 grupos a A/B/C/D
+  gEls.slice(0,4).forEach((g,i)=>{
+    const k=GRP[i];
+    g.querySelectorAll('.coloreable').forEach(el=>{
+      const prev=elmGrp.get(el);if(prev)grp[prev].delete(el);
+      grp[k].add(el);elmGrp.set(el,k);
+    });
+  });
+  applyColors();
+  showToast(`✓ ${gEls.length} grupos de Illustrator detectados y asignados automáticamente`);
+  return true;
 }
 
 // ── FILE UPLOAD ───────────────────────────────────────────────────────────
@@ -433,32 +578,35 @@ function loadFile(event){
     const parser=new DOMParser();
     const doc=parser.parseFromString(e.target.result,'image/svg+xml');
     const srcSVG=doc.querySelector('svg');
-    if(!srcSVG){alert('Archivo no válido — asegurate de exportar como SVG');return;}
-    resetGroups();
+    if(!srcSVG){alert('Archivo no válido — exportá como SVG desde Illustrator');return;}
+    resetAll();
     const tramaSVG=document.getElementById('tramaSVG');
     const vb=srcSVG.getAttribute('viewBox');
     if(vb) tramaSVG.setAttribute('viewBox',vb);
     else{
-      const w=srcSVG.getAttribute('width')||'600';
-      const h=srcSVG.getAttribute('height')||'460';
+      const w=parseFloat(srcSVG.getAttribute('width'))||600;
+      const h=parseFloat(srcSVG.getAttribute('height'))||460;
       tramaSVG.setAttribute('viewBox',`0 0 ${w} ${h}`);
     }
     tramaSVG.innerHTML=srcSVG.innerHTML;
-    // Dar fill por defecto a shapes sin fill
     tramaSVG.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
       if(!el.getAttribute('fill')&&!el.style.fill) el.setAttribute('fill','#888');
     });
     wireupSVG();
     document.getElementById('upHint').textContent=file.name;
+    // Intentar detección automática de grupos
+    setTimeout(()=>detectAndAutoAssign(tramaSVG),100);
   };
   reader.readAsText(file);
   event.target.value='';
 }
 
-function resetGroups(){
-  GRP.forEach(k=>grp[k].clear());
-  elmGrp.clear();
-  tramaLoaded=false;
+function resetAll(){
+  GRP.forEach(k=>{grp[k].clear();grpSat[k]=null;grpLum[k]=null;});
+  elmGrp.clear();pending.clear();
+  tramaLoaded=false;showStrokes=true;
+  document.getElementById('strokeBtn').classList.remove('active');
+  document.getElementById('strokeBtn').textContent='⊡ Contornos';
 }
 
 // ── DRAG & DROP ───────────────────────────────────────────────────────────
@@ -472,41 +620,91 @@ wrap.addEventListener('drop',e=>{
 });
 
 // ── SAMPLE TRAMA ─────────────────────────────────────────────────────────
-// Genera una trama de cuadrados divididos en 4 triángulos (pinwheel)
-// 4 familias naturales: arriba (A), derecha (B), abajo (C), izquierda (D)
 function loadSample(){
-  resetGroups();
+  resetAll();
   const svg=document.getElementById('tramaSVG');
   svg.setAttribute('viewBox','0 0 600 460');
-
-  const cell=46;
-  const cols=13,rows=10;
-  const ox=(600-cols*cell)/2;
-  const oy=(460-rows*cell)/2;
-
-  // Tonos base para que la trama se vea sin color asignado
-  const fills=['#c4c4c8','#b0b0b4','#9c9ca0','#888890'];
-
+  const cell=46,cols=13,rows=10;
+  const ox=(600-cols*cell)/2,oy=(460-rows*cell)/2;
+  const fills=['#c4c4c8','#b0b0b4','#9c9ca0','#80808a'];
   let html='';
   for(let r=0;r<rows;r++){
     for(let c=0;c<cols;c++){
-      const x=ox+c*cell, y=oy+r*cell;
-      const cx=x+cell/2, cy=y+cell/2;
-      html+=`<path d="M${x},${y} L${x+cell},${y} L${cx},${cy} Z" fill="${fills[0]}" stroke="#141416" stroke-width="0.7"/>`;
-      html+=`<path d="M${x+cell},${y} L${x+cell},${y+cell} L${cx},${cy} Z" fill="${fills[1]}" stroke="#141416" stroke-width="0.7"/>`;
-      html+=`<path d="M${x+cell},${y+cell} L${x},${y+cell} L${cx},${cy} Z" fill="${fills[2]}" stroke="#141416" stroke-width="0.7"/>`;
-      html+=`<path d="M${x},${y+cell} L${x},${y} L${cx},${cy} Z" fill="${fills[3]}" stroke="#141416" stroke-width="0.7"/>`;
+      const x=ox+c*cell,y=oy+r*cell,cx=x+cell/2,cy=y+cell/2;
+      html+=`<path d="M${x},${y} L${x+cell},${y} L${cx},${cy} Z" fill="${fills[0]}" stroke="#141416" stroke-width="0.7" data-face="A"/>`;
+      html+=`<path d="M${x+cell},${y} L${x+cell},${y+cell} L${cx},${cy} Z" fill="${fills[1]}" stroke="#141416" stroke-width="0.7" data-face="B"/>`;
+      html+=`<path d="M${x+cell},${y+cell} L${x},${y+cell} L${cx},${cy} Z" fill="${fills[2]}" stroke="#141416" stroke-width="0.7" data-face="C"/>`;
+      html+=`<path d="M${x},${y+cell} L${x},${y} L${cx},${cy} Z" fill="${fills[3]}" stroke="#141416" stroke-width="0.7" data-face="D"/>`;
     }
   }
   svg.innerHTML=html;
   wireupSVG();
-  document.getElementById('upHint').textContent='Trama pinwheel · 4 familias naturales: superior (A) · derecha (B) · inferior (C) · izquierda (D)';
+  document.getElementById('upHint').textContent='Trama pinwheel · 4 familias: superior A · derecha B · inferior C · izquierda D';
+  document.getElementById('tramaEmpty').style.display='none';
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+function exportPNG(){
+  if(!tramaLoaded){showToast('Primero cargá una trama');return;}
+  const svg=document.getElementById('tramaSVG');
+  const vb=svg.viewBox.baseVal;
+  const w=vb.width||600,h=vb.height||460;
+  const svgData=new XMLSerializer().serializeToString(svg);
+  const blob=new Blob([svgData],{type:'image/svg+xml'});
+  const url=URL.createObjectURL(blob);
+  const img=new Image();
+  img.onload=()=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=w*2;canvas.height=h*2; // 2x para calidad
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#141416';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    const a=document.createElement('a');
+    a.download='trama-cromatica.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('✓ PNG descargado');
+  };
+  img.src=url;
+}
+
+function exportSVG(){
+  if(!tramaLoaded){showToast('Primero cargá una trama');return;}
+  const svg=document.getElementById('tramaSVG');
+  const clone=svg.cloneNode(true);
+  // Aplicar fills como atributos en el clon
+  const origEls=[...svg.querySelectorAll('.coloreable')];
+  const cloneEls=[...clone.querySelectorAll('.coloreable')];
+  origEls.forEach((el,i)=>{
+    if(el.style.fill) cloneEls[i].setAttribute('fill',el.style.fill);
+    cloneEls[i].removeAttribute('class');
+    cloneEls[i].removeAttribute('style');
+    if(el.style.fill) cloneEls[i].setAttribute('fill',el.style.fill);
+    // Restaurar stroke según estado
+    if(!showStrokes) cloneEls[i].setAttribute('stroke','none');
+  });
+  const svgStr='<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(clone);
+  const blob=new Blob([svgStr],{type:'image/svg+xml'});
+  const a=document.createElement('a');
+  a.download='trama-cromatica.svg';
+  a.href=URL.createObjectURL(blob);
+  a.click();
+  showToast('✓ SVG descargado');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 buildSchemeGrid();
 setScheme('complementario');
-onSlider();
+onGlobalSlider();
 drawWheel();
 renderGroups();
 </script>

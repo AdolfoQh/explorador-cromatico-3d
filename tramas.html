@@ -461,8 +461,8 @@ function setGrpLum(k,v,valEl){
 function clearGrp(e,k){
   e.stopPropagation();
   grp[k].forEach(el=>{
-    el.style.fill=el._origFill||'';
-    el.style.fillOpacity='';
+    el.style.fill='#888888'; // vuelve al neutro, no al color original de Illustrator
+    el.style.fillOpacity='1';
     elmGrp.delete(el);
   });
   grp[k].clear();
@@ -520,11 +520,16 @@ function wireupSVG(){
   const svg=document.getElementById('tramaSVG');
   let count=0;
   svg.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
-    const fill=el.getAttribute('fill')||el.style.fill||'';
-    const stroke=el.getAttribute('stroke')||'';
-    if(fill==='none'&&stroke) return; // líneas de contorno puras
-    el._origFill=el.style.fill||el.getAttribute('fill')||'';
+    // Usar getComputedStyle para detectar fills definidos via clases CSS de Illustrator
+    const compFill=window.getComputedStyle(el).getPropertyValue('fill');
+    const compStroke=window.getComputedStyle(el).getPropertyValue('stroke');
+    // Ignorar elementos que son solo stroke (contornos sin relleno)
+    if(compFill==='none'&&compStroke&&compStroke!=='none') return;
+    el._origFill=compFill||'';
     el._origStroke=el.getAttribute('stroke')||el.style.stroke||'';
+    // FORZAR fill neutro via inline style — sobreescribe clases CSS de Illustrator
+    el.style.fill='#888888';
+    el.style.fillOpacity='1';
     el.classList.add('coloreable');
     el.addEventListener('click',e=>{
       if(e.shiftKey||shiftHeld){togglePending(el);}
@@ -589,10 +594,7 @@ function loadFile(event){
       tramaSVG.setAttribute('viewBox',`0 0 ${w} ${h}`);
     }
     tramaSVG.innerHTML=srcSVG.innerHTML;
-    tramaSVG.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
-      if(!el.getAttribute('fill')&&!el.style.fill) el.setAttribute('fill','#888');
-    });
-    wireupSVG();
+    wireupSVG(); // wireupSVG normaliza los fills via inline style
     document.getElementById('upHint').textContent=file.name;
     // Intentar detección automática de grupos
     setTimeout(()=>detectAndAutoAssign(tramaSVG),100);

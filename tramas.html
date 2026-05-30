@@ -519,17 +519,16 @@ function clearPending(){
 function wireupSVG(){
   const svg=document.getElementById('tramaSVG');
   let count=0;
-  svg.querySelectorAll('path,polygon,rect,circle,ellipse').forEach(el=>{
-    // Usar getComputedStyle para detectar fills definidos via clases CSS de Illustrator
-    const compFill=window.getComputedStyle(el).getPropertyValue('fill');
-    const compStroke=window.getComputedStyle(el).getPropertyValue('stroke');
-    // Ignorar elementos que son solo stroke (contornos sin relleno)
-    if(compFill==='none'&&compStroke&&compStroke!=='none') return;
-    el._origFill=compFill||'';
-    el._origStroke=el.getAttribute('stroke')||el.style.stroke||'';
-    // FORZAR fill neutro via inline style — sobreescribe clases CSS de Illustrator
+  svg.querySelectorAll('path,polygon,rect,circle,ellipse,line,polyline').forEach(el=>{
+    // Ignorar elementos que son solo stroke (fill explícitamente none)
+    const fillAttr=el.getAttribute('fill')||'';
+    const strokeAttr=el.getAttribute('stroke')||el.style.stroke||'';
+    if(fillAttr==='none'&&strokeAttr&&strokeAttr!=='none') return;
+    el._origStroke=strokeAttr;
+    // Forzar fill neutro visible — sin CSS del SVG, el inline style siempre gana
     el.style.fill='#888888';
     el.style.fillOpacity='1';
+    el.style.stroke=strokeAttr||'none';
     el.classList.add('coloreable');
     el.addEventListener('click',e=>{
       if(e.shiftKey||shiftHeld){togglePending(el);}
@@ -594,7 +593,16 @@ function loadFile(event){
       tramaSVG.setAttribute('viewBox',`0 0 ${w} ${h}`);
     }
     tramaSVG.innerHTML=srcSVG.innerHTML;
-    wireupSVG(); // wireupSVG normaliza los fills via inline style
+    // Eliminar el bloque <style> de Illustrator (puede tener !important que vence al inline style)
+    tramaSVG.querySelectorAll('style').forEach(s=>s.remove());
+    // Eliminar atributos fill/stroke en <g> que se heredan a los hijos
+    tramaSVG.querySelectorAll('[fill],[stroke]').forEach(el=>{
+      if(el.tagName.toLowerCase()==='g'||el.tagName.toLowerCase()==='svg'){
+        el.removeAttribute('fill');
+        el.removeAttribute('stroke');
+      }
+    });
+    wireupSVG();
     document.getElementById('upHint').textContent=file.name;
     // Intentar detección automática de grupos
     setTimeout(()=>detectAndAutoAssign(tramaSVG),100);
